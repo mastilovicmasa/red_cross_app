@@ -8,9 +8,12 @@ import {
 import React, { createContext, useEffect, useMemo, useState } from 'react';
 
 import { auth } from '@/firebase/auth';
+import { AppUser } from '@/models/User';
+import { createUser, getUserById } from '@/services/userService';
 
 type AuthContextType = {
-  user: User | null;
+  firebaseUser: User | null;
+  appUser: AppUser | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string) => Promise<void>;
@@ -24,12 +27,22 @@ type AuthProviderProps = {
 };
 
 export function AuthProvider({ children }: AuthProviderProps) {
-  const [user, setUser] = useState<User | null>(null);
+  const [firebaseUser, setFirebaseUser] = useState<User | null>(null);
+  const [appUser, setAppUser] = useState<AppUser | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, currentUser => {
-      setUser(currentUser);
+    const unsubscribe = onAuthStateChanged(auth, async currentUser => {
+      setLoading(true);
+      setFirebaseUser(currentUser);
+
+      if (currentUser) {
+        const firestoreUser = await getUserById(currentUser.uid);
+        setAppUser(firestoreUser);
+      } else {
+        setAppUser(null);
+      }
+
       setLoading(false);
     });
 
@@ -38,19 +51,43 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const value = useMemo(
     () => ({
-      user,
+      firebaseUser,
+      appUser,
       loading,
       signIn: async (email: string, password: string) => {
         await signInWithEmailAndPassword(auth, email, password);
       },
       signUp: async (email: string, password: string) => {
-        await createUserWithEmailAndPassword(auth, email, password);
+        const userCredential = await createUserWithEmailAndPassword(
+          auth,
+          email,
+          password
+        );
+
+        const createdFirebaseUser = userCredential.user;
+
+        const newAppUser: AppUser = {
+          id: createdFirebaseUser.uid,
+          email: createdFirebaseUser.email ?? '',
+          isActive: true,
+          role: 'VOLUNTEER',
+          qrToken: createdFirebaseUser.uid,
+          firstName: '',
+          lastName: '',
+          dateOfBirth: '',
+          gender: 'MALE',
+          competencyIds: [],
+        };
+
+        await createUser(newAppUser);
+        setAppUser(newAppUser);
       },
       signOut: async () => {
         await firebaseSignOut(auth);
+        setAppUser(null);
       },
     }),
-    [user, loading]
+    [firebaseUser, appUser, loading]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

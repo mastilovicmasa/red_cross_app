@@ -13,14 +13,16 @@ function RootNavigation() {
   useEffect(() => {
     if (loading) return;
 
-    const inLoginScreen = segments[0] === 'login';
+    const inAuthScreen =
+      segments[0] === 'login' || segments[0] === 'register';
 
-    if (!firebaseUser && !inLoginScreen) {
+    if (!firebaseUser && !inAuthScreen) {
       router.replace('/login');
+      return;
     }
 
-    if (firebaseUser && inLoginScreen) {
-      router.replace('/' as any);
+    if (firebaseUser && inAuthScreen) {
+      router.replace('/');
     }
   }, [firebaseUser, loading, segments, router]);
 
@@ -32,13 +34,7 @@ function RootNavigation() {
     );
   }
 
-  return (
-    <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="index" options={{ headerShown: false }} />
-      <Stack.Screen name="login" options={{ headerShown: false }} />
-      <Stack.Screen name="+not-found" />
-    </Stack>
-  );
+  return <Stack screenOptions={{ headerShown: false }} />;
 }
 
 export default function RootLayout() {

@@ -8,7 +8,7 @@ import {
 import React, { createContext, useEffect, useMemo, useState } from 'react';
 
 import { auth } from '@/firebase/auth';
-import { AppUser } from '@/models/User';
+import { AppUser, Gender } from '@/models/User';
 import { createUser, getUserById } from '@/services/userService';
 
 type AuthContextType = {
@@ -16,7 +16,13 @@ type AuthContextType = {
   appUser: AppUser | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string) => Promise<void>;
+  signUp: (
+    email: string,
+    password: string,
+    firstName: string,
+    lastName: string,
+    gender: Gender
+  ) => Promise<void>;
   signOut: () => Promise<void>;
 };
 
@@ -54,10 +60,18 @@ export function AuthProvider({ children }: AuthProviderProps) {
       firebaseUser,
       appUser,
       loading,
+
       signIn: async (email: string, password: string) => {
         await signInWithEmailAndPassword(auth, email, password);
       },
-      signUp: async (email: string, password: string) => {
+
+      signUp: async (
+        email: string,
+        password: string,
+        firstName: string,
+        lastName: string,
+        gender: Gender
+      ) => {
         const userCredential = await createUserWithEmailAndPassword(
           auth,
           email,
@@ -72,16 +86,17 @@ export function AuthProvider({ children }: AuthProviderProps) {
           isActive: true,
           role: 'VOLUNTEER',
           qrToken: createdFirebaseUser.uid,
-          firstName: '',
-          lastName: '',
+          firstName,
+          lastName,
           dateOfBirth: '',
-          gender: 'MALE',
+          gender,
           competencyIds: [],
         };
 
         await createUser(newAppUser);
         setAppUser(newAppUser);
       },
+
       signOut: async () => {
         await firebaseSignOut(auth);
         setAppUser(null);

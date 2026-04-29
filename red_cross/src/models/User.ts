@@ -20,6 +20,7 @@ export type AppUser = {
   gender: Gender;
   phoneNumber?: string;
   school?: string;
+  profileImageUrl?: string;
 
   competencyIds: string[];
 };

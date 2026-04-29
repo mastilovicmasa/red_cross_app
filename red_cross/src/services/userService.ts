@@ -1,4 +1,4 @@
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
 
 import { db } from '@/firebase/firestore';
 import { AppUser } from '@/models/User';
@@ -17,4 +17,12 @@ export async function getUserById(userId: string): Promise<AppUser | null> {
   }
 
   return userSnapshot.data() as AppUser;
+}
+
+export async function updateUser(
+  userId: string,
+  data: Partial<AppUser>
+): Promise<void> {
+  const userRef = doc(db, 'users', userId);
+  await updateDoc(userRef, data);
 }

@@ -15,6 +15,7 @@ type AuthContextType = {
   firebaseUser: User | null;
   appUser: AppUser | null;
   loading: boolean;
+  refreshAppUser: () => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (
     email: string,
@@ -36,6 +37,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [firebaseUser, setFirebaseUser] = useState<User | null>(null);
   const [appUser, setAppUser] = useState<AppUser | null>(null);
   const [loading, setLoading] = useState(true);
+
+  const refreshAppUser = async () => {
+    if (!firebaseUser) return;
+
+    const firestoreUser = await getUserById(firebaseUser.uid);
+    setAppUser(firestoreUser);
+  };
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async currentUser => {
@@ -60,6 +68,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       firebaseUser,
       appUser,
       loading,
+      refreshAppUser,
 
       signIn: async (email: string, password: string) => {
         await signInWithEmailAndPassword(auth, email, password);

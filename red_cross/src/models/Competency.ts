@@ -6,7 +6,7 @@ export type Program =
   | 'ANTITRAFFICKING'
   | 'HEALTH'
   | 'LIFESAVING'
-  | 'DUNJ';
+  | 'DUN';
 
 export type Competency = {
   id: string;

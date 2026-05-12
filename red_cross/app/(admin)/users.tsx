@@ -19,6 +19,7 @@ import {
   getAllUsers,
   updateUser,
 } from '@/services/userService';
+import { UserCard } from '@/components/common/UserCard'
 
 const roles: UserRole[] = [
   'VOLUNTEER',
@@ -176,67 +177,18 @@ export default function AdminUsersScreen() {
         </View>
 
         {filteredUsers.map(user => (
-          <View key={user.id} style={styles.userCard}>
-            <View style={styles.userHeader}>
-              <View>
-                <Text style={styles.userName}>
-                  {user.firstName} {user.lastName}
-                </Text>
-                <Text style={styles.userEmail}>{user.email}</Text>
-              </View>
-
-              <View
-                style={[
-                  styles.statusBadge,
-                  user.isActive ? styles.activeBadge : styles.inactiveBadge,
-                ]}
-              >
-                <Text
-                  style={[
-                    styles.statusText,
-                    user.isActive ? styles.activeText : styles.inactiveText,
-                  ]}
-                >
-                  {user.isActive ? 'Aktivan' : 'Neaktivan'}
-                </Text>
-              </View>
-            </View>
-
-            <Text style={styles.roleText}>
-              Uloga: {formatRole(user.role)}
-            </Text>
-            <View style={styles.actions}>
-              <View style={styles.topActions}>
-                <Pressable
-                  style={styles.roleButton}
-                  onPress={() => handleChangeRole(user)}
-                >
-                  <Text style={styles.roleButtonText}>Promeni ulogu</Text>
-                </Pressable>
-
-                <Pressable
-                  style={[
-                    styles.statusButton,
-                    !user.isActive && styles.reactivateButton,
-                  ]}
-                  onPress={() => handleToggleStatus(user)}
-                >
-                  <Text style={styles.statusButtonText}>
-                    {user.isActive ? 'Deaktiviraj' : 'Reaktiviraj'}
-                  </Text>
-                </Pressable>
-              </View>
-
-              <Pressable
-                style={styles.competenciesButton}
-                onPress={() => handleEditCompetencies(user)}
-              >
-                <Text style={styles.competenciesButtonText}>
-                  Pregled kompetencija
-                </Text>
-              </Pressable>
-            </View>
-          </View>
+        <UserCard
+          key={user.id}
+          user={user}
+          showEmail
+          showStatus
+          showRole
+          showAdminActions
+          showCompetencyAction
+          onChangeRole={handleChangeRole}
+          onToggleStatus={handleToggleStatus}
+          onEditCompetencies={handleEditCompetencies}
+        />
         ))}
 
         {filteredUsers.length === 0 && (

@@ -19,6 +19,7 @@ function RootNavigation() {
     const inAdminGroup = segments[0] === '(admin)';
     const inTabsGroup = segments[0] === '(tabs)';
     const inUserCompetenciesScreen = segments[0] === 'user-competencies';
+    const inEmployeeGroup = segments[0] === '(employee)';
 
     if (!firebaseUser && !inAuthScreen) {
       router.replace('/login');
@@ -28,21 +29,39 @@ function RootNavigation() {
     if (firebaseUser && appUser && inAuthScreen) {
       if (appUser.role === 'ADMIN') {
         router.replace('/(admin)' as any);
+      } else if (appUser.role === 'EMPLOYEE') {
+        router.replace('/(employee)' as any);
       } else {
-        router.replace('/(tabs)');
+        router.replace('/(tabs)' as any);
       }
-
       return;
     }
 
     if (firebaseUser && appUser) {
-      if (appUser.role === 'ADMIN' && !inAdminGroup && !inUserCompetenciesScreen) {
+      if (
+        appUser.role === 'ADMIN' &&
+        !inAdminGroup &&
+        !inUserCompetenciesScreen
+      ) {
         router.replace('/(admin)' as any);
         return;
       }
 
-      if (appUser.role !== 'ADMIN' && inAdminGroup ) {
-        router.replace('/(tabs)');
+      if (
+        appUser.role === 'EMPLOYEE' &&
+        !inEmployeeGroup &&
+        !inUserCompetenciesScreen
+      ) {
+        router.replace('/(employee)' as any);
+        return;
+      }
+
+      if (
+        appUser.role !== 'ADMIN' &&
+        appUser.role !== 'EMPLOYEE' &&
+        (inAdminGroup || inEmployeeGroup)
+      ) {
+        router.replace('/(tabs)' as any);
         return;
       }
     }

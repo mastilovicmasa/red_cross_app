@@ -11,7 +11,7 @@ import {
   Modal
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-
+import { router } from 'expo-router';
 import { Colors } from '@/constants/Colors';
 import { Spacing } from '@/constants/Spacing';
 import { AppUser, UserRole } from '@/models/User';
@@ -89,6 +89,13 @@ export default function AdminUsersScreen() {
         },
       ]
     );
+  };
+
+  const handleEditCompetencies = (user: AppUser) => {
+    router.push({
+      pathname: '/user-competencies/[userId]' as any,
+      params: { userId: user.id },
+    });
   };
 
   return (
@@ -198,24 +205,34 @@ export default function AdminUsersScreen() {
             <Text style={styles.roleText}>
               Uloga: {formatRole(user.role)}
             </Text>
-
             <View style={styles.actions}>
-              <Pressable
-                style={styles.roleButton}
-                onPress={() => handleChangeRole(user)}
-              >
-                <Text style={styles.roleButtonText}>Promeni ulogu</Text>
-              </Pressable>
+              <View style={styles.topActions}>
+                <Pressable
+                  style={styles.roleButton}
+                  onPress={() => handleChangeRole(user)}
+                >
+                  <Text style={styles.roleButtonText}>Promeni ulogu</Text>
+                </Pressable>
+
+                <Pressable
+                  style={[
+                    styles.statusButton,
+                    !user.isActive && styles.reactivateButton,
+                  ]}
+                  onPress={() => handleToggleStatus(user)}
+                >
+                  <Text style={styles.statusButtonText}>
+                    {user.isActive ? 'Deaktiviraj' : 'Reaktiviraj'}
+                  </Text>
+                </Pressable>
+              </View>
 
               <Pressable
-                style={[
-                  styles.statusButton,
-                  !user.isActive && styles.reactivateButton,
-                ]}
-                onPress={() => handleToggleStatus(user)}
+                style={styles.competenciesButton}
+                onPress={() => handleEditCompetencies(user)}
               >
-                <Text style={styles.statusButtonText}>
-                  {user.isActive ? 'Deaktiviraj' : 'Reaktiviraj'}
+                <Text style={styles.competenciesButtonText}>
+                  Pregled kompetencija
                 </Text>
               </Pressable>
             </View>
@@ -335,9 +352,13 @@ const styles = StyleSheet.create({
     color: '#B42318',
   },
   actions: {
+    marginTop: Spacing.md,
+    gap: Spacing.sm,
+  },
+
+  topActions: {
     flexDirection: 'row',
     gap: Spacing.sm,
-    marginTop: Spacing.md,
   },
   roleButton: {
     flex: 1,
@@ -448,5 +469,18 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     color: '#FFF',
+  },
+  competenciesButton: {
+    flex: 1,
+    minWidth: '45%',
+    backgroundColor: Colors.primaryLight,
+    borderRadius: 10,
+    paddingVertical: 10,
+    alignItems: 'center',
+  },
+  competenciesButtonText: {
+    color: Colors.primary,
+    fontWeight: '600',
+    fontSize: 13,
   },
 });

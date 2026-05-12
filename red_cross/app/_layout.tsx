@@ -18,6 +18,7 @@ function RootNavigation() {
 
     const inAdminGroup = segments[0] === '(admin)';
     const inTabsGroup = segments[0] === '(tabs)';
+    const inUserCompetenciesScreen = segments[0] === 'user-competencies';
 
     if (!firebaseUser && !inAuthScreen) {
       router.replace('/login');
@@ -35,12 +36,12 @@ function RootNavigation() {
     }
 
     if (firebaseUser && appUser) {
-      if (appUser.role === 'ADMIN' && !inAdminGroup) {
+      if (appUser.role === 'ADMIN' && !inAdminGroup && !inUserCompetenciesScreen) {
         router.replace('/(admin)' as any);
         return;
       }
 
-      if (appUser.role !== 'ADMIN' && inAdminGroup) {
+      if (appUser.role !== 'ADMIN' && inAdminGroup ) {
         router.replace('/(tabs)');
         return;
       }

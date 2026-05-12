@@ -12,4 +12,5 @@ export type Competency = {
   id: string;
   program: Program;
   level: string;
+  isActive?: boolean;
 };

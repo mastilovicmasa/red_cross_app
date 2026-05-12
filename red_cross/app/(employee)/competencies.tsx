@@ -1,9 +1,5 @@
-import { Text, View } from 'react-native';
+import { CompetencyManagementScreen } from '@/components/common/CompetencyManagementScreen';
 
 export default function EmployeeCompetenciesScreen() {
-  return (
-    <View>
-      <Text>Kompetencije</Text>
-    </View>
-  );
+  return <CompetencyManagementScreen />;
 }

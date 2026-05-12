@@ -1,4 +1,10 @@
-import { collection, doc, getDocs, setDoc } from 'firebase/firestore';
+import {
+  collection,
+  doc,
+  getDocs,
+  setDoc,
+  updateDoc,
+} from 'firebase/firestore';
 
 import { db } from '@/firebase/firestore';
 import { Competency } from '@/models/Competency';
@@ -9,6 +15,21 @@ export async function getAllCompetencies(): Promise<Competency[]> {
   const snapshot = await getDocs(collection(db, 'competencies'));
 
   return snapshot.docs.map(doc => doc.data() as Competency);
+}
+
+export async function createCompetency(
+  competency: Competency
+): Promise<void> {
+  const competencyRef = doc(db, 'competencies', competency.id);
+  await setDoc(competencyRef, competency);
+}
+
+export async function updateCompetency(
+  competencyId: string,
+  data: Partial<Competency>
+): Promise<void> {
+  const competencyRef = doc(db, 'competencies', competencyId);
+  await updateDoc(competencyRef, data);
 }
 
 /* ---------- SEED (za razvoj) ---------- */

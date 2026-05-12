@@ -39,9 +39,15 @@ export default function ManageCompetenciesScreen() {
 
   if (!appUser) return null;
 
-  const programs = [...new Set(competencies.map(c => c.program))];
+  const activeCompetencies = competencies.filter(
+    c => c.isActive !== false
+  );
 
-  const filtered = competencies.filter(c => c.program === selectedProgram);
+  const programs = [...new Set(activeCompetencies.map(c => c.program))];
+
+  const filtered = activeCompetencies.filter(
+    c => c.program === selectedProgram
+  );
 
   const toggleCompetency = (id: string) => {
     setSelectedIds(prev =>

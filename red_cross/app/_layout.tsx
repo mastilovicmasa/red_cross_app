@@ -6,7 +6,7 @@ import { AuthProvider } from '@/contexts/AuthContext';
 import { useAuth } from '@/hooks/useAuth';
 
 function RootNavigation() {
-  const { firebaseUser, loading } = useAuth();
+  const { firebaseUser, appUser, loading } = useAuth();
   const router = useRouter();
   const segments = useSegments();
 
@@ -16,15 +16,36 @@ function RootNavigation() {
     const inAuthScreen =
       segments[0] === 'login' || segments[0] === 'register';
 
+    const inAdminGroup = segments[0] === '(admin)';
+    const inTabsGroup = segments[0] === '(tabs)';
+
     if (!firebaseUser && !inAuthScreen) {
       router.replace('/login');
       return;
     }
 
-    if (firebaseUser && inAuthScreen) {
-      router.replace('/');
+    if (firebaseUser && appUser && inAuthScreen) {
+      if (appUser.role === 'ADMIN') {
+        router.replace('/(admin)' as any);
+      } else {
+        router.replace('/(tabs)');
+      }
+
+      return;
     }
-  }, [firebaseUser, loading, segments, router]);
+
+    if (firebaseUser && appUser) {
+      if (appUser.role === 'ADMIN' && !inAdminGroup) {
+        router.replace('/(admin)' as any);
+        return;
+      }
+
+      if (appUser.role !== 'ADMIN' && inAdminGroup) {
+        router.replace('/(tabs)');
+        return;
+      }
+    }
+  }, [firebaseUser, appUser, loading, segments, router]);
 
   if (loading) {
     return (
@@ -36,7 +57,6 @@ function RootNavigation() {
 
   return <Stack screenOptions={{ headerShown: false }} />;
 }
-
 export default function RootLayout() {
   return (
     <AuthProvider>

@@ -66,20 +66,20 @@ export default function TabsLayout() {
         options={{
           title: 'Korisnici',
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="people" size={size} color={color} />
+            <Ionicons name="people-outline" size={size} color={color} />
           ),
         }}
       />
 
-      {/* <Tabs.Screen
-        name="profile"
+      <Tabs.Screen
+        name="competencies"
         options={{
-          title: 'Profil',
+          title: 'Kompetencije',
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="person-outline" size={size} color={color} />
+            <Ionicons name="ribbon-outline" size={size} color={color} />
           ),
         }}
-      /> */}
+      />
     </Tabs>
   );
 }

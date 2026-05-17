@@ -19,7 +19,7 @@ import {
   getAllUsers,
   updateUser,
 } from '@/services/userService';
-import { UserCard } from '@/components/common/UserCard'
+import { UserCard } from '@/components/common/userCard'
 
 const roles: UserRole[] = [
   'VOLUNTEER',

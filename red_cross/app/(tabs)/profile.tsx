@@ -118,6 +118,23 @@ export default function ProfileScreen() {
             Prikažite QR kod za identifikaciju prilikom izdavanja opreme.
           </Text>
         </View>
+
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Prisustvo na aktivnosti</Text>
+
+            <Pressable
+              onPress={() => router.push('/scan-attendance')}
+              style={styles.iconButton}
+            >
+              <Ionicons name="scan-outline" size={20} color={Colors.primary} />
+            </Pressable>
+          </View>
+
+          <Text style={styles.sectionDescription}>
+            Skenirajte QR kod interne aktivnosti kako biste evidentirali svoje prisustvo.
+          </Text>
+        </View>
       </ScrollView>
     </SafeAreaView>
   );

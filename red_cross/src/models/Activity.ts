@@ -5,7 +5,9 @@ export type ActivityStatus =
   | 'COMPLETED'
   | 'CANCELLED';
 
-export type Activity = {
+export type ActivityType = 'INTERNAL' | 'EXTERNAL';
+
+export type BaseActivity = {
   id: string;
   title: string;
   description: string;
@@ -14,6 +16,8 @@ export type Activity = {
   location: string;
   status: ActivityStatus;
   createdByUserId: string;
+  createdAt: string; // ISO string
+  updatedAt: string; // ISO string
 };
 
 export type ActivityRequirement = {
@@ -23,14 +27,21 @@ export type ActivityRequirement = {
   requiredCount: number;
 };
 
-export type ExternalActivity = Activity & {
+export type ExternalActivity = BaseActivity & {
   type: 'EXTERNAL';
-  requiredVolunteerCount?: number;
 };
 
-export type InternalActivity = Activity & {
+export type InternalActivity = BaseActivity & {
   type: 'INTERNAL';
   qrToken: string;
   qrValidFrom: string; // ISO string
   qrValidTo: string; // ISO string
+};
+
+export type Activity = InternalActivity | ExternalActivity;
+
+export type InternalActivityAttendance = {
+  activityId: string;
+  userId: string;
+  checkedInAt: string; // ISO string
 };

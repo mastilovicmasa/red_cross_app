@@ -1,4 +1,3 @@
-import { Ionicons } from '@expo/vector-icons';
 import { useEffect, useMemo, useState } from 'react';
 import {
   Alert,
@@ -12,6 +11,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { HeaderIconButton } from '@/components/common/HeaderIconButton';
 import { Colors } from '@/constants/Colors';
 import { Spacing } from '@/constants/Spacing';
 import { Competency, Program } from '@/models/Competency';
@@ -236,9 +236,7 @@ export function CompetencyManagementScreen() {
             </Text>
           </View>
 
-          <Pressable style={styles.addButton} onPress={openCreateModal}>
-            <Ionicons name="add" size={22} color="#FFF" />
-          </Pressable>
+          <HeaderIconButton iconName="add" onPress={openCreateModal} />
         </View>
 
         <ScrollView
@@ -399,14 +397,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: Colors.textSecondary,
     marginTop: 2,
-  },
-  addButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: Colors.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   competencyCard: {
     backgroundColor: '#FFF',

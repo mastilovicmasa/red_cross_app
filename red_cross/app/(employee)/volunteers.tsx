@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { UserCard } from '@/components/common/UserCard';
+import { UserCard } from '@/components/common/userCard';
 import { Colors } from '@/constants/Colors';
 import { Spacing } from '@/constants/Spacing';
 import { AppUser } from '@/models/User';

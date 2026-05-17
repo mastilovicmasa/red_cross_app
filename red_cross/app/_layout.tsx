@@ -20,6 +20,14 @@ function RootNavigation() {
     const inTabsGroup = segments[0] === '(tabs)';
     const inUserCompetenciesScreen = segments[0] === 'user-competencies';
     const inEmployeeGroup = segments[0] === '(employee)';
+    const inInstructorGroup = segments[0] === '(instructor)';
+    const inSharedProtectedScreen =
+      segments[0] === 'create-activity' ||
+      segments[0] === 'activity' ||
+      segments[0] === 'scan-attendance' ||
+      segments[0] === 'edit-profile' ||
+      segments[0] === 'manage-competencies' ||
+      segments[0] === 'qr-code';
 
     if (!firebaseUser && !inAuthScreen) {
       router.replace('/login');
@@ -31,6 +39,8 @@ function RootNavigation() {
         router.replace('/(admin)' as any);
       } else if (appUser.role === 'EMPLOYEE') {
         router.replace('/(employee)' as any);
+      } else if (appUser.role === 'INSTRUCTOR') {
+        router.replace('/(instructor)' as any);
       } else {
         router.replace('/(tabs)' as any);
       }
@@ -50,16 +60,27 @@ function RootNavigation() {
       if (
         appUser.role === 'EMPLOYEE' &&
         !inEmployeeGroup &&
-        !inUserCompetenciesScreen
+        !inUserCompetenciesScreen &&
+        !inSharedProtectedScreen
       ) {
         router.replace('/(employee)' as any);
         return;
       }
 
       if (
+        appUser.role === 'INSTRUCTOR' &&
+        !inInstructorGroup &&
+        !inSharedProtectedScreen
+      ) {
+        router.replace('/(instructor)' as any);
+        return;
+      }
+
+      if (
         appUser.role !== 'ADMIN' &&
         appUser.role !== 'EMPLOYEE' &&
-        (inAdminGroup || inEmployeeGroup)
+        appUser.role !== 'INSTRUCTOR' &&
+        (inAdminGroup || inEmployeeGroup || inInstructorGroup)
       ) {
         router.replace('/(tabs)' as any);
         return;

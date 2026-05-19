@@ -1,4 +1,5 @@
 import { router, useLocalSearchParams } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
@@ -172,7 +173,26 @@ export default function ActivityDetailsScreen() {
         contentContainerStyle={styles.container}
         showsVerticalScrollIndicator={false}
       >
-        <Text style={styles.screenTitle}>Detalji aktivnosti</Text>
+        <View style={styles.screenHeader}>
+          <Text style={styles.screenTitle}>Detalji aktivnosti</Text>
+
+          {canEditInternalActivity(activity, appUser?.id) ? (
+            <Pressable
+              style={({ pressed }) => [
+                styles.editActivityButton,
+                pressed ? styles.editActivityButtonPressed : null,
+              ]}
+              onPress={() =>
+                router.replace({
+                  pathname: '/edit-activity/[activityId]' as any,
+                  params: { activityId: activity.id },
+                })
+              }
+            >
+              <Ionicons name="create-outline" size={20} color={Colors.primary} />
+            </Pressable>
+          ) : null}
+        </View>
 
         <ActivityInfoSection activity={activity} creator={creator} />
 
@@ -231,6 +251,24 @@ function canCancelInternalActivity(activity: Activity, userId?: string) {
   }
 
   return new Date() < endDate;
+}
+
+function canEditInternalActivity(activity: Activity, userId?: string) {
+  if (
+    activity.type !== 'INTERNAL' ||
+    activity.status !== 'ACTIVE' ||
+    activity.createdByUserId !== userId
+  ) {
+    return false;
+  }
+
+  const startDate = new Date(activity.startDateTime);
+
+  if (Number.isNaN(startDate.getTime())) {
+    return false;
+  }
+
+  return new Date() < startDate;
 }
 
 function InternalActivityQrSection({
@@ -409,9 +447,16 @@ const styles = StyleSheet.create({
     gap: Spacing.md,
   },
   screenTitle: {
+    flex: 1,
     fontSize: 22,
     fontWeight: '700',
     color: Colors.textPrimary,
+  },
+  screenHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: Spacing.md,
   },
   section: {
     backgroundColor: '#FFF',
@@ -435,6 +480,20 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '700',
     color: '#FFF',
+  },
+  editActivityButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    backgroundColor: '#FFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    alignSelf: 'flex-end',
+  },
+  editActivityButtonPressed: {
+    opacity: 0.75,
   },
   sectionTitle: {
     fontSize: 16,

@@ -23,6 +23,7 @@ function RootNavigation() {
     const inInstructorGroup = segments[0] === '(instructor)';
     const inSharedProtectedScreen =
       segments[0] === 'create-activity' ||
+      segments[0] === 'edit-activity' ||
       segments[0] === 'activity' ||
       segments[0] === 'scan-attendance' ||
       segments[0] === 'edit-profile' ||

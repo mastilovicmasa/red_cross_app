@@ -23,6 +23,17 @@ export async function cancelActivity(activityId: string): Promise<void> {
   });
 }
 
+export async function updateActivity(
+  activityId: string,
+  data: Partial<Activity>
+): Promise<void> {
+  const activityRef = doc(db, 'activities', activityId);
+  await updateDoc(activityRef, {
+    ...data,
+    updatedAt: new Date().toISOString(),
+  });
+}
+
 export async function getActivityById(
   activityId: string
 ): Promise<Activity | null> {

@@ -14,7 +14,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { ActivityInfoSection } from '@/components/activities/ActivityInfoSection';
 import { Colors } from '@/constants/Colors';
 import { Spacing } from '@/constants/Spacing';
-import { Activity } from '@/models/Activity';
+import { Activity, InternalActivityAttendance } from '@/models/Activity';
 import { AppUser } from '@/models/User';
 import { getInternalActivityAttendances } from '@/services/activityAttendanceService';
 import { getActivityById } from '@/services/activityService';
@@ -24,8 +24,11 @@ export default function ActivityDetailsScreen() {
   const { activityId } = useLocalSearchParams<{ activityId: string }>();
   const [activity, setActivity] = useState<Activity | null>(null);
   const [creator, setCreator] = useState<AppUser | null>(null);
-  const [attendees, setAttendees] = useState<AppUser[]>([]);
+  const [attendanceItems, setAttendanceItems] = useState<AttendanceListItem[]>(
+    []
+  );
   const [loading, setLoading] = useState(true);
+  const [refreshingAttendance, setRefreshingAttendance] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -54,22 +57,51 @@ export default function ActivityDetailsScreen() {
       setCreator(loadedCreator);
 
       if (loadedActivity.type === 'INTERNAL') {
-        const attendances = await getInternalActivityAttendances(
-          loadedActivity.id
-        );
-        const loadedAttendees = await Promise.all(
-          attendances.map(attendance => getUserById(attendance.userId))
-        );
-
-        setAttendees(
-          loadedAttendees.filter((user): user is AppUser => Boolean(user))
-        );
+        await loadAttendanceItems(loadedActivity.id);
       }
     } catch (loadError) {
       console.error('Error loading activity details:', loadError);
       setError('Došlo je do greške prilikom učitavanja aktivnosti.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadAttendanceItems = async (internalActivityId: string) => {
+    const attendances = await getInternalActivityAttendances(internalActivityId);
+    const loadedUsers = await Promise.all(
+      attendances.map(attendance => getUserById(attendance.userId))
+    );
+    const items = attendances
+      .map((attendance, index) => {
+        const user = loadedUsers[index];
+
+        if (!user) {
+          return null;
+        }
+
+        return {
+          attendance,
+          user,
+        };
+      })
+      .filter((item): item is AttendanceListItem => Boolean(item));
+
+    setAttendanceItems(items);
+  };
+
+  const refreshAttendanceItems = async () => {
+    if (!activity || activity.type !== 'INTERNAL') {
+      return;
+    }
+
+    try {
+      setRefreshingAttendance(true);
+      await loadAttendanceItems(activity.id);
+    } catch (refreshError) {
+      console.error('Error refreshing activity attendance:', refreshError);
+    } finally {
+      setRefreshingAttendance(false);
     }
   };
 
@@ -110,7 +142,9 @@ export default function ActivityDetailsScreen() {
         {activity.type === 'INTERNAL' ? (
           <InternalActivityQrSection
             activity={activity}
-            attendees={attendees}
+            attendanceItems={attendanceItems}
+            refreshingAttendance={refreshingAttendance}
+            onRefreshAttendance={refreshAttendanceItems}
           />
         ) : (
           <View style={styles.section}>
@@ -127,10 +161,14 @@ export default function ActivityDetailsScreen() {
 
 function InternalActivityQrSection({
   activity,
-  attendees,
+  attendanceItems,
+  refreshingAttendance,
+  onRefreshAttendance,
 }: {
   activity: Activity;
-  attendees: AppUser[];
+  attendanceItems: AttendanceListItem[];
+  refreshingAttendance: boolean;
+  onRefreshAttendance: () => void;
 }) {
   if (activity.type !== 'INTERNAL') {
     return null;
@@ -141,17 +179,32 @@ function InternalActivityQrSection({
     activityId: activity.id,
     qrToken: activity.qrToken,
   });
+  const qrValidTo = new Date(activity.qrValidTo);
+  const isQrExpired = Number.isNaN(qrValidTo.getTime())
+    ? true
+    : new Date() > qrValidTo;
 
   return (
     <View style={styles.section}>
-      <Text style={styles.sectionTitle}>QR kod za prisustvo</Text>
-      <Text style={styles.sectionDescription}>
-        Volonteri skeniraju ovaj kod kako bi evidentirali prisustvo na internoj aktivnosti.
-      </Text>
+      {isQrExpired ? (
+        <>
+          <Text style={styles.sectionTitle}>QR kod je istekao</Text>
+          <Text style={styles.sectionDescription}>
+            QR kod za evidentiranje prisustva više nije aktivan.
+          </Text>
+        </>
+      ) : (
+        <>
+          <Text style={styles.sectionTitle}>QR kod za prisustvo</Text>
+          <Text style={styles.sectionDescription}>
+            Volonteri skeniraju ovaj kod kako bi evidentirali prisustvo na internoj aktivnosti.
+          </Text>
 
-      <View style={styles.qrContainer}>
-        <QRCode value={qrValue} size={220} />
-      </View>
+          <View style={styles.qrContainer}>
+            <QRCode value={qrValue} size={220} />
+          </View>
+        </>
+      )}
 
       <View style={styles.validityBox}>
         <Text style={styles.validityLabel}>Validan od</Text>
@@ -166,27 +219,63 @@ function InternalActivityQrSection({
       </View>
 
       <View style={styles.attendanceSection}>
-        <Text style={styles.sectionTitle}>Evidentirani prisutni</Text>
+        <View style={styles.attendanceHeader}>
+          <Text style={styles.sectionTitle}>Evidentirani prisutni</Text>
 
-        {attendees.length > 0 ? (
-          <View style={styles.attendeeList}>
-            {attendees.map(attendee => (
-              <View key={attendee.id} style={styles.attendeeItem}>
-                <Text style={styles.attendeeName}>
-                  {attendee.firstName} {attendee.lastName}
-                </Text>
-                <Text style={styles.attendeeRole}>
-                  {formatRole(attendee.role)}
-                </Text>
-              </View>
+          <Pressable
+            style={({ pressed }) => [
+              styles.refreshButton,
+              pressed ? styles.refreshButtonPressed : null,
+            ]}
+            onPress={onRefreshAttendance}
+            disabled={refreshingAttendance}
+          >
+            {refreshingAttendance ? (
+              <ActivityIndicator size="small" color={Colors.primary} />
+            ) : (
+              <Text style={styles.refreshButtonText}>↻</Text>
+            )}
+          </Pressable>
+        </View>
+
+        {attendanceItems.length > 0 ? (
+          <ScrollView
+            style={styles.attendeeList}
+            nestedScrollEnabled
+            showsVerticalScrollIndicator
+          >
+            {attendanceItems.map(item => (
+              <AttendanceItem key={item.user.id} item={item} />
             ))}
-          </View>
+          </ScrollView>
         ) : (
           <Text style={styles.emptyAttendanceText}>
             Za sada nema evidentiranih prisutnih.
           </Text>
         )}
       </View>
+    </View>
+  );
+}
+
+type AttendanceListItem = {
+  attendance: InternalActivityAttendance;
+  user: AppUser;
+};
+
+function AttendanceItem({ item }: { item: AttendanceListItem }) {
+  return (
+    <View style={styles.attendeeItem}>
+      <View style={styles.attendeeInfo}>
+        <Text style={styles.attendeeName}>
+          {item.user.firstName} {item.user.lastName}
+        </Text>
+        <Text style={styles.attendeeRole}>{formatRole(item.user.role)}</Text>
+      </View>
+
+      <Text style={styles.checkedInAt}>
+        {formatDateTime(item.attendance.checkedInAt)}
+      </Text>
     </View>
   );
 }
@@ -287,15 +376,49 @@ const styles = StyleSheet.create({
     marginTop: Spacing.md,
     paddingTop: Spacing.md,
   },
+  attendanceHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: Spacing.md,
+    marginBottom: Spacing.sm,
+  },
+  refreshButton: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FFF',
+  },
+  refreshButtonPressed: {
+    opacity: 0.75,
+  },
+  refreshButtonText: {
+    fontSize: 20,
+    lineHeight: 22,
+    fontWeight: '700',
+    color: Colors.primary,
+  },
   attendeeList: {
-    gap: Spacing.sm,
+    maxHeight: 320,
   },
   attendeeItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: Spacing.md,
     borderWidth: 1,
     borderColor: Colors.border,
     borderRadius: 8,
     padding: Spacing.sm,
     backgroundColor: Colors.primaryLight,
+    marginBottom: Spacing.sm,
+  },
+  attendeeInfo: {
+    flex: 1,
   },
   attendeeName: {
     fontSize: 14,
@@ -306,6 +429,12 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: Colors.textSecondary,
     marginTop: 2,
+  },
+  checkedInAt: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: Colors.textSecondary,
+    textAlign: 'right',
   },
   emptyAttendanceText: {
     fontSize: 14,

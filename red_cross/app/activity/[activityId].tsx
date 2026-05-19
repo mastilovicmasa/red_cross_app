@@ -2,6 +2,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
+  Alert,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -14,13 +15,15 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { ActivityInfoSection } from '@/components/activities/ActivityInfoSection';
 import { Colors } from '@/constants/Colors';
 import { Spacing } from '@/constants/Spacing';
+import { useAuth } from '@/hooks/useAuth';
 import { Activity, InternalActivityAttendance } from '@/models/Activity';
 import { AppUser } from '@/models/User';
 import { getInternalActivityAttendances } from '@/services/activityAttendanceService';
-import { getActivityById } from '@/services/activityService';
+import { cancelActivity, getActivityById } from '@/services/activityService';
 import { getUserById } from '@/services/userService';
 
 export default function ActivityDetailsScreen() {
+  const { appUser } = useAuth();
   const { activityId } = useLocalSearchParams<{ activityId: string }>();
   const [activity, setActivity] = useState<Activity | null>(null);
   const [creator, setCreator] = useState<AppUser | null>(null);
@@ -29,6 +32,7 @@ export default function ActivityDetailsScreen() {
   );
   const [loading, setLoading] = useState(true);
   const [refreshingAttendance, setRefreshingAttendance] = useState(false);
+  const [cancellingActivity, setCancellingActivity] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -105,6 +109,39 @@ export default function ActivityDetailsScreen() {
     }
   };
 
+  const handleCancelActivity = () => {
+    if (!activity) {
+      return;
+    }
+
+    Alert.alert(
+      'Otkazivanje aktivnosti',
+      'Da li ste sigurni da želite da otkažete ovu aktivnost?',
+      [
+        { text: 'Odustani', style: 'cancel' },
+        {
+          text: 'Otkaži aktivnost',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              setCancellingActivity(true);
+              await cancelActivity(activity.id);
+              await loadActivity();
+            } catch (cancelError) {
+              console.error('Error cancelling activity:', cancelError);
+              Alert.alert(
+                'Greška',
+                'Došlo je do greške prilikom otkazivanja aktivnosti.'
+              );
+            } finally {
+              setCancellingActivity(false);
+            }
+          },
+        },
+      ]
+    );
+  };
+
   if (loading) {
     return (
       <SafeAreaView style={styles.safeArea}>
@@ -139,6 +176,25 @@ export default function ActivityDetailsScreen() {
 
         <ActivityInfoSection activity={activity} creator={creator} />
 
+        {canCancelInternalActivity(activity, appUser?.id) ? (
+          <Pressable
+            style={({ pressed }) => [
+              styles.cancelActivityButton,
+              pressed ? styles.cancelActivityButtonPressed : null,
+            ]}
+            onPress={handleCancelActivity}
+            disabled={cancellingActivity}
+          >
+            {cancellingActivity ? (
+              <ActivityIndicator color="#FFF" />
+            ) : (
+              <Text style={styles.cancelActivityButtonText}>
+                Otkaži aktivnost
+              </Text>
+            )}
+          </Pressable>
+        ) : null}
+
         {activity.type === 'INTERNAL' ? (
           <InternalActivityQrSection
             activity={activity}
@@ -157,6 +213,24 @@ export default function ActivityDetailsScreen() {
       </ScrollView>
     </SafeAreaView>
   );
+}
+
+function canCancelInternalActivity(activity: Activity, userId?: string) {
+  if (
+    activity.type !== 'INTERNAL' ||
+    activity.status !== 'ACTIVE' ||
+    activity.createdByUserId !== userId
+  ) {
+    return false;
+  }
+
+  const endDate = new Date(activity.endDateTime);
+
+  if (Number.isNaN(endDate.getTime())) {
+    return false;
+  }
+
+  return new Date() < endDate;
 }
 
 function InternalActivityQrSection({
@@ -183,10 +257,18 @@ function InternalActivityQrSection({
   const isQrExpired = Number.isNaN(qrValidTo.getTime())
     ? true
     : new Date() > qrValidTo;
+  const isCancelled = activity.status === 'CANCELLED';
 
   return (
     <View style={styles.section}>
-      {isQrExpired ? (
+      {isCancelled ? (
+        <>
+          <Text style={styles.sectionTitle}>Aktivnost je otkazana</Text>
+          <Text style={styles.sectionDescription}>
+            QR kod za evidentiranje prisustva nije dostupan za otkazanu aktivnost.
+          </Text>
+        </>
+      ) : isQrExpired ? (
         <>
           <Text style={styles.sectionTitle}>QR kod je istekao</Text>
           <Text style={styles.sectionDescription}>
@@ -337,6 +419,22 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: Colors.border,
     padding: Spacing.md,
+  },
+  cancelActivityButton: {
+    minHeight: 48,
+    borderRadius: 10,
+    backgroundColor: Colors.error,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: Spacing.md,
+  },
+  cancelActivityButtonPressed: {
+    opacity: 0.85,
+  },
+  cancelActivityButtonText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#FFF',
   },
   sectionTitle: {
     fontSize: 16,

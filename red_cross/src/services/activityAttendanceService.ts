@@ -28,6 +28,20 @@ export async function checkInToInternalActivity(
     };
   }
 
+  if (activity.status === 'CANCELLED') {
+    return {
+      success: false,
+      message: 'Aktivnost je otkazana.',
+    };
+  }
+
+  if (activity.status !== 'ACTIVE') {
+    return {
+      success: false,
+      message: 'Prisustvo nije moguće evidentirati za ovu aktivnost.',
+    };
+  }
+
   if (activity.qrToken !== qrToken) {
     return {
       success: false,

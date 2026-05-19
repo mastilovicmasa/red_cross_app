@@ -17,6 +17,7 @@ import { ActivityCard } from '@/components/activities/ActivityCard';
 import { HeaderIconButton } from '@/components/common/HeaderIconButton';
 import { Colors } from '@/constants/Colors';
 import { Spacing } from '@/constants/Spacing';
+import { useAuth } from '@/hooks/useAuth';
 import { Activity } from '@/models/Activity';
 import { getAllActivities } from '@/services/activityService';
 
@@ -29,6 +30,7 @@ const tabLabels: Record<ActivityTab, string> = {
 };
 
 export default function EmployeeActivitiesScreen() {
+  const { appUser } = useAuth();
   const [activities, setActivities] = useState<Activity[]>([]);
   const [selectedTab, setSelectedTab] = useState<ActivityTab>('UPCOMING');
   const [search, setSearch] = useState('');
@@ -39,14 +41,23 @@ export default function EmployeeActivitiesScreen() {
   useFocusEffect(
     useCallback(() => {
       loadActivities();
-    }, [])
+    }, [appUser?.id])
   );
 
   const loadActivities = async () => {
+    if (!appUser?.id) {
+      setActivities([]);
+      setLoading(false);
+      setRefreshing(false);
+      return;
+    }
+
     try {
       setError('');
       const data = await getAllActivities();
-      setActivities(data);
+      setActivities(
+        data.filter(activity => activity.createdByUserId === appUser?.id)
+      );
     } catch (loadError) {
       console.error('Error loading activities:', loadError);
       setError('Došlo je do greške prilikom učitavanja aktivnosti.');
@@ -98,7 +109,7 @@ export default function EmployeeActivitiesScreen() {
         ListHeaderComponent={
           <View>
             <View style={styles.header}>
-              <Text style={styles.title}>Aktivnosti</Text>
+              <Text style={styles.title}>Moje aktivnosti</Text>
 
               <HeaderIconButton iconName="add" onPress={handleAddActivity} />
             </View>
@@ -160,7 +171,7 @@ export default function EmployeeActivitiesScreen() {
               <ActivityIndicator color={Colors.primary} />
             </View>
           ) : (
-            <Text style={styles.emptyText}>Nema aktivnosti za prikaz.</Text>
+            <Text style={styles.emptyText}>Nemate aktivnosti za prikaz.</Text>
           )
         }
       />

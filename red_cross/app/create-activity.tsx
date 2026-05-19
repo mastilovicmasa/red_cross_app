@@ -165,7 +165,7 @@ export default function CreateActivityScreen() {
       location: trimmedLocation,
       startDateTime: startDateTime.toISOString(),
       endDateTime: endDateTime.toISOString(),
-      status: 'DRAFT',
+      status: activityType === 'INTERNAL' ? 'ACTIVE' : 'DRAFT',
       createdByUserId,
       createdAt: now,
       updatedAt: now,

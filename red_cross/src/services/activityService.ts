@@ -4,6 +4,7 @@ import {
   getDoc,
   getDocs,
   setDoc,
+  updateDoc,
 } from 'firebase/firestore';
 
 import { db } from '@/firebase/firestore';
@@ -12,6 +13,14 @@ import { Activity } from '@/models/Activity';
 export async function createActivity(activity: Activity): Promise<void> {
   const activityRef = doc(db, 'activities', activity.id);
   await setDoc(activityRef, activity);
+}
+
+export async function cancelActivity(activityId: string): Promise<void> {
+  const activityRef = doc(db, 'activities', activityId);
+  await updateDoc(activityRef, {
+    status: 'CANCELLED',
+    updatedAt: new Date().toISOString(),
+  });
 }
 
 export async function getActivityById(

@@ -34,6 +34,18 @@ export async function updateActivity(
   });
 }
 
+export async function publishExternalActivity(
+  activityId: string
+): Promise<void> {
+  const activity = await getActivityById(activityId);
+
+  if (!activity || activity.type !== 'EXTERNAL' || activity.status !== 'DRAFT') {
+    throw new Error('Only external draft activities can be published.');
+  }
+
+  await updateActivity(activityId, { status: 'ACTIVE' });
+}
+
 export async function getActivityById(
   activityId: string
 ): Promise<Activity | null> {

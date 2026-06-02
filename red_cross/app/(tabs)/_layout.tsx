@@ -72,6 +72,16 @@ export default function TabsLayout() {
       />
 
       <Tabs.Screen
+        name="invitations"
+        options={{
+          title: 'Pozivi',
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="notifications-outline" size={size} color={color} />
+          ),
+        }}
+      />
+
+      <Tabs.Screen
         name="profile"
         options={{
           title: 'Profil',

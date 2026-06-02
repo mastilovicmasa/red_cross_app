@@ -14,6 +14,7 @@ import QRCode from 'react-native-qrcode-svg';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ActivityInfoSection } from '@/components/activities/ActivityInfoSection';
+import { ExternalActivityRequirementsSection } from '@/components/activities/ExternalActivityRequirementsSection';
 import { Colors } from '@/constants/Colors';
 import { Spacing } from '@/constants/Spacing';
 import { useAuth } from '@/hooks/useAuth';
@@ -176,7 +177,7 @@ export default function ActivityDetailsScreen() {
         <View style={styles.screenHeader}>
           <Text style={styles.screenTitle}>Detalji aktivnosti</Text>
 
-          {canEditInternalActivity(activity, appUser?.id) ? (
+          {canEditActivity(activity, appUser?.id) ? (
             <Pressable
               style={({ pressed }) => [
                 styles.editActivityButton,
@@ -196,7 +197,27 @@ export default function ActivityDetailsScreen() {
 
         <ActivityInfoSection activity={activity} creator={creator} />
 
-        {canCancelInternalActivity(activity, appUser?.id) ? (
+        {canInviteVolunteers(activity, appUser?.id) ? (
+          <Pressable
+            style={({ pressed }) => [
+              styles.inviteVolunteersButton,
+              pressed ? styles.inviteVolunteersButtonPressed : null,
+            ]}
+            onPress={() =>
+              router.push({
+                pathname: '/invite-volunteers/[activityId]' as any,
+                params: { activityId: activity.id },
+              })
+            }
+          >
+            <Ionicons name="people-outline" size={20} color="#FFF" />
+            <Text style={styles.inviteVolunteersButtonText}>
+              Pozovi volontere
+            </Text>
+          </Pressable>
+        ) : null}
+
+        {canCancelActivity(activity, appUser?.id) ? (
           <Pressable
             style={({ pressed }) => [
               styles.cancelActivityButton,
@@ -223,21 +244,22 @@ export default function ActivityDetailsScreen() {
             onRefreshAttendance={refreshAttendanceItems}
           />
         ) : (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Eksterna aktivnost</Text>
-            <Text style={styles.sectionDescription}>
-              Detaljan prikaz eksternih aktivnosti biće dodat u sledećem koraku.
-            </Text>
-          </View>
+          <ExternalActivityRequirementsSection
+            activity={activity}
+            canManageDraft={canManageExternalActivityDraft(
+              activity,
+              appUser?.id
+            )}
+            onActivityPublished={loadActivity}
+          />
         )}
       </ScrollView>
     </SafeAreaView>
   );
 }
 
-function canCancelInternalActivity(activity: Activity, userId?: string) {
+function canCancelActivity(activity: Activity, userId?: string) {
   if (
-    activity.type !== 'INTERNAL' ||
     activity.status !== 'ACTIVE' ||
     activity.createdByUserId !== userId
   ) {
@@ -253,12 +275,32 @@ function canCancelInternalActivity(activity: Activity, userId?: string) {
   return new Date() < endDate;
 }
 
-function canEditInternalActivity(activity: Activity, userId?: string) {
-  if (
-    activity.type !== 'INTERNAL' ||
-    activity.status !== 'ACTIVE' ||
-    activity.createdByUserId !== userId
-  ) {
+function canManageExternalActivityDraft(activity: Activity, userId?: string) {
+  return (
+    activity.type === 'EXTERNAL' &&
+    activity.status === 'DRAFT' &&
+    activity.createdByUserId === userId
+  );
+}
+
+function canInviteVolunteers(activity: Activity, userId?: string) {
+  return (
+    activity.type === 'EXTERNAL' &&
+    activity.status === 'ACTIVE' &&
+    activity.createdByUserId === userId
+  );
+}
+
+function canEditActivity(activity: Activity, userId?: string) {
+  if (activity.createdByUserId !== userId) {
+    return false;
+  }
+
+  if (activity.type === 'EXTERNAL') {
+    return activity.status === 'DRAFT';
+  }
+
+  if (activity.status !== 'ACTIVE') {
     return false;
   }
 
@@ -472,6 +514,24 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: Spacing.md,
+  },
+  inviteVolunteersButton: {
+    minHeight: 48,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: Spacing.sm,
+    borderRadius: 10,
+    backgroundColor: Colors.primary,
+    paddingHorizontal: Spacing.md,
+  },
+  inviteVolunteersButtonPressed: {
+    opacity: 0.85,
+  },
+  inviteVolunteersButtonText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#FFF',
   },
   cancelActivityButtonPressed: {
     opacity: 0.85,

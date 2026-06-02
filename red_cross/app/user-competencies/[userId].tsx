@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { BackButton } from '@/components/common/BackButton';
 import { Colors } from '@/constants/Colors';
 import { Spacing } from '@/constants/Spacing';
 import { Competency } from '@/models/Competency';
@@ -92,10 +93,9 @@ export default function UserCompetenciesScreen() {
         contentContainerStyle={styles.container}
         showsVerticalScrollIndicator={false}
       >
-        <Pressable style={styles.backButton} onPress={() => router.back()}>
-          <Ionicons name="chevron-back" size={22} color={Colors.primary} />
-          <Text style={styles.backButtonText}>Nazad</Text>
-        </Pressable>
+        <View style={styles.backButtonContainer}>
+          <BackButton onPress={() => router.back()} />
+        </View>
 
         <View style={styles.userCard}>
           <Text style={styles.userName}>
@@ -204,15 +204,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: Spacing.lg,
   },
-  backButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  backButtonContainer: {
     marginBottom: Spacing.md,
-  },
-  backButtonText: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: Colors.primary,
   },
   userCard: {
     backgroundColor: '#FFF',

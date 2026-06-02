@@ -88,7 +88,7 @@ export default function EditActivityScreen() {
         return;
       }
 
-      if (!canEditInternalActivity(loadedActivity, appUser?.id)) {
+      if (!canEditActivity(loadedActivity, appUser?.id)) {
         setError('Nemate dozvolu za izmenu ove aktivnosti.');
         return;
       }
@@ -108,7 +108,7 @@ export default function EditActivityScreen() {
   };
 
   const handleSave = async () => {
-    if (!activity || activity.type !== 'INTERNAL') {
+    if (!activity) {
       return;
     }
 
@@ -139,8 +139,12 @@ export default function EditActivityScreen() {
         location: trimmedLocation,
         startDateTime: startDateTime.toISOString(),
         endDateTime: endDateTime.toISOString(),
-        qrValidFrom: startDateTime.toISOString(),
-        qrValidTo: createQrValidToDate(endDateTime).toISOString(),
+        ...(activity.type === 'INTERNAL'
+          ? {
+              qrValidFrom: startDateTime.toISOString(),
+              qrValidTo: createQrValidToDate(endDateTime).toISOString(),
+            }
+          : {}),
       });
       router.replace({
         pathname: '/activity/[activityId]' as any,
@@ -277,7 +281,9 @@ export default function EditActivityScreen() {
       >
         <Text style={styles.title}>Izmena aktivnosti</Text>
         <Text style={styles.subtitle}>
-          Aktivnost možete menjati dok ne počne.
+          {activity?.type === 'EXTERNAL'
+            ? 'Nacrt aktivnosti možete menjati do objavljivanja.'
+            : 'Aktivnost možete menjati dok ne počne.'}
         </Text>
 
         <CustomInput
@@ -352,12 +358,16 @@ export default function EditActivityScreen() {
   );
 }
 
-function canEditInternalActivity(activity: Activity, userId?: string) {
-  if (
-    activity.type !== 'INTERNAL' ||
-    activity.status !== 'ACTIVE' ||
-    activity.createdByUserId !== userId
-  ) {
+function canEditActivity(activity: Activity, userId?: string) {
+  if (activity.createdByUserId !== userId) {
+    return false;
+  }
+
+  if (activity.type === 'EXTERNAL') {
+    return activity.status === 'DRAFT';
+  }
+
+  if (activity.status !== 'ACTIVE') {
     return false;
   }
 

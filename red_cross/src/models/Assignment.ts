@@ -10,4 +10,5 @@ export type Assignment = {
   assignedAt: string; // ISO string
   status: AssignmentStatus;
   volunteerComment?: string;
+  reportSubmittedAt?: string; // ISO string
 };

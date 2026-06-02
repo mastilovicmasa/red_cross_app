@@ -4,6 +4,8 @@ import { useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
+  Image,
+  Linking,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -20,12 +22,17 @@ import { useAuth } from '@/hooks/useAuth';
 import { Assignment } from '@/models/Assignment';
 import { ExternalActivity } from '@/models/Activity';
 import { Invitation, InvitationResponseStatus } from '@/models/Invitation';
+import { Photo } from '@/models/Photo';
 import { AppUser } from '@/models/User';
 import {
   assignVolunteer,
   cancelVolunteerAssignment,
   getActivityAssignments,
 } from '@/services/assignmentService';
+import {
+  getAssignmentPhotos,
+  getPhotoDownloadUrl,
+} from '@/services/activityReportService';
 import { getActivityById } from '@/services/activityService';
 import { getActivityInvitations } from '@/services/invitationService';
 import { getAllUsers } from '@/services/userService';
@@ -34,6 +41,7 @@ type InvitationListItem = {
   invitation: Invitation;
   volunteer: AppUser;
   assignment?: Assignment;
+  reportPhotos: ReportPhoto[];
 };
 
 export default function ActivityResponsesScreen() {
@@ -87,6 +95,16 @@ export default function ActivityResponsesScreen() {
           assignment,
         ])
       );
+      const photosByVolunteerId = new Map(
+        await Promise.all(
+          loadedAssignments.map(async assignment => [
+            assignment.volunteerId,
+            await loadReportPhotos(
+              await getAssignmentPhotos(activityId, assignment.volunteerId)
+            ),
+          ] as const)
+        )
+      );
 
       const loadedItems: InvitationListItem[] = [];
 
@@ -101,6 +119,7 @@ export default function ActivityResponsesScreen() {
           invitation,
           volunteer,
           assignment: assignmentsByVolunteerId.get(invitation.volunteerId),
+          reportPhotos: photosByVolunteerId.get(invitation.volunteerId) ?? [],
         });
       });
 
@@ -142,6 +161,7 @@ export default function ActivityResponsesScreen() {
     [items]
   );
   const canManageTeam = !hasActivityStarted(activity);
+  const canViewReports = hasActivityEnded(activity);
 
   const handleAssignVolunteer = (item: InvitationListItem) => {
     if (!canManageTeam || hasActivityStarted(activity)) {
@@ -290,8 +310,69 @@ export default function ActivityResponsesScreen() {
           items={declinedItems}
           savingVolunteerId={savingVolunteerId}
         />
+
+        {canViewReports ? <ReportSection items={assignedItems} /> : null}
       </ScrollView>
     </SafeAreaView>
+  );
+}
+
+type ReportPhoto = Photo & {
+  url: string;
+};
+
+function ReportSection({ items }: { items: InvitationListItem[] }) {
+  return (
+    <View style={styles.section}>
+      <Text style={styles.sectionTitle}>Izveštaji sa aktivnosti</Text>
+
+      {items.length > 0 ? (
+        <View style={styles.items}>
+          {items.map(item => (
+            <View key={item.volunteer.id} style={styles.reportItem}>
+              <Text style={styles.volunteerName}>
+                {formatVolunteerName(item.volunteer)}
+              </Text>
+
+              {item.assignment?.reportSubmittedAt ? (
+                <>
+                  <Text style={styles.reportStatusSubmitted}>
+                    Izveštaj je poslat
+                  </Text>
+                  <Text style={styles.reportComment}>
+                    {item.assignment.volunteerComment ||
+                      'Komentar nije dodat.'}
+                  </Text>
+
+                  {item.reportPhotos.length > 0 ? (
+                    <View style={styles.photoGrid}>
+                      {item.reportPhotos.map(photo => (
+                        <Pressable
+                          key={photo.id}
+                          onPress={() => Linking.openURL(photo.url)}
+                        >
+                          <Image source={{ uri: photo.url }} style={styles.photo} />
+                        </Pressable>
+                      ))}
+                    </View>
+                  ) : (
+                    <Text style={styles.emptyReportText}>
+                      Fotografije nisu dodate.
+                    </Text>
+                  )}
+                </>
+              ) : (
+                <Text style={styles.emptyReportText}>
+                  Izveštaj još nije poslat.
+                </Text>
+              )}
+            </View>
+          ))}
+        </View>
+      ) : (
+        <Text style={styles.emptyText}>Nema članova konačnog tima.</Text>
+      )}
+    </View>
   );
 }
 
@@ -401,6 +482,25 @@ function hasActivityStarted(activity: ExternalActivity | null) {
   return Number.isNaN(startDate.getTime()) || new Date() >= startDate;
 }
 
+function hasActivityEnded(activity: ExternalActivity | null) {
+  if (!activity) {
+    return false;
+  }
+
+  const endDate = new Date(activity.endDateTime);
+
+  return !Number.isNaN(endDate.getTime()) && new Date() >= endDate;
+}
+
+async function loadReportPhotos(photos: Photo[]): Promise<ReportPhoto[]> {
+  return Promise.all(
+    photos.map(async photo => ({
+      ...photo,
+      url: await getPhotoDownloadUrl(photo.path),
+    }))
+  );
+}
+
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
@@ -482,6 +582,40 @@ const styles = StyleSheet.create({
     lineHeight: 18,
     color: Colors.textSecondary,
     marginTop: Spacing.xs,
+  },
+  reportItem: {
+    borderTopWidth: 1,
+    borderTopColor: Colors.border,
+    paddingTop: Spacing.sm,
+  },
+  reportStatusSubmitted: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#1B7F46',
+    marginTop: 2,
+  },
+  reportComment: {
+    fontSize: 13,
+    lineHeight: 18,
+    color: Colors.textPrimary,
+    marginTop: Spacing.sm,
+  },
+  emptyReportText: {
+    fontSize: 13,
+    color: Colors.textSecondary,
+    marginTop: Spacing.xs,
+  },
+  photoGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: Spacing.sm,
+    marginTop: Spacing.sm,
+  },
+  photo: {
+    width: 72,
+    height: 72,
+    borderRadius: 8,
+    backgroundColor: Colors.primaryLight,
   },
   actionButton: {
     minHeight: 36,

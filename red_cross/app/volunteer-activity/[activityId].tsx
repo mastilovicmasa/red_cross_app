@@ -1,10 +1,15 @@
 import { router, useLocalSearchParams } from 'expo-router';
+import * as ImagePicker from 'expo-image-picker';
 import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
+  Alert,
+  Image,
+  Pressable,
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -16,6 +21,12 @@ import { Spacing } from '@/constants/Spacing';
 import { useAuth } from '@/hooks/useAuth';
 import { Assignment, AssignmentStatus } from '@/models/Assignment';
 import { Activity } from '@/models/Activity';
+import { Photo } from '@/models/Photo';
+import {
+  getAssignmentPhotos,
+  getPhotoDownloadUrl,
+  saveActivityReport,
+} from '@/services/activityReportService';
 import { getVolunteerAssignment } from '@/services/assignmentService';
 import { getActivityById } from '@/services/activityService';
 
@@ -30,7 +41,12 @@ export default function VolunteerActivityDetailsScreen() {
   const { activityId } = useLocalSearchParams<{ activityId: string }>();
   const [activity, setActivity] = useState<Activity | null>(null);
   const [assignment, setAssignment] = useState<Assignment | null>(null);
+  const [comment, setComment] = useState('');
+  const [savedPhotos, setSavedPhotos] = useState<ReportPhoto[]>([]);
+  const [newPhotoUris, setNewPhotoUris] = useState<string[]>([]);
+  const [removedPhotos, setRemovedPhotos] = useState<Photo[]>([]);
   const [loading, setLoading] = useState(true);
+  const [savingReport, setSavingReport] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -46,9 +62,10 @@ export default function VolunteerActivityDetailsScreen() {
 
     try {
       setError('');
-      const [loadedActivity, loadedAssignment] = await Promise.all([
+      const [loadedActivity, loadedAssignment, loadedPhotos] = await Promise.all([
         getActivityById(activityId),
         getVolunteerAssignment(activityId, appUser.id),
+        getAssignmentPhotos(activityId, appUser.id),
       ]);
 
       if (!loadedActivity || !loadedAssignment) {
@@ -58,6 +75,10 @@ export default function VolunteerActivityDetailsScreen() {
 
       setActivity(loadedActivity);
       setAssignment(loadedAssignment);
+      setComment(loadedAssignment.volunteerComment ?? '');
+      setRemovedPhotos([]);
+      setNewPhotoUris([]);
+      setSavedPhotos(await loadReportPhotos(loadedPhotos));
     } catch (loadError) {
       console.error('Error loading volunteer activity details:', loadError);
       setError('Došlo je do greške prilikom učitavanja aktivnosti.');
@@ -86,6 +107,73 @@ export default function VolunteerActivityDetailsScreen() {
       </SafeAreaView>
     );
   }
+
+  const canEditReport =
+    assignment.status === 'ASSIGNED' && hasActivityEnded(activity);
+  const visibleSavedPhotos = savedPhotos.filter(
+    photo => !removedPhotos.some(removedPhoto => removedPhoto.id === photo.id)
+  );
+  const photoCount = visibleSavedPhotos.length + newPhotoUris.length;
+
+  const handleAddPhotos = async () => {
+    const remainingPhotoCount = 4 - photoCount;
+
+    if (remainingPhotoCount <= 0) {
+      Alert.alert('Ograničenje', 'Možete dodati najviše četiri fotografije.');
+      return;
+    }
+
+    const permission =
+      await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+    if (!permission.granted) {
+      Alert.alert(
+        'Dozvola je potrebna',
+        'Omogućite pristup galeriji kako biste dodali fotografije.'
+      );
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsMultipleSelection: true,
+      selectionLimit: remainingPhotoCount,
+      quality: 0.8,
+    });
+
+    if (!result.canceled) {
+      setNewPhotoUris(currentUris => [
+        ...currentUris,
+        ...result.assets
+          .slice(0, remainingPhotoCount)
+          .map(asset => asset.uri),
+      ]);
+    }
+  };
+
+  const handleSaveReport = async () => {
+    if (!appUser?.id) {
+      return;
+    }
+
+    try {
+      setSavingReport(true);
+      await saveActivityReport({
+        activityId: activity.id,
+        volunteerId: appUser.id,
+        volunteerComment: comment,
+        newPhotoUris,
+        removedPhotos,
+      });
+      await loadData();
+      Alert.alert('Uspešno', 'Izveštaj je sačuvan.');
+    } catch (saveError) {
+      console.error('Error saving activity report:', saveError);
+      Alert.alert('Greška', 'Nije moguće sačuvati izveštaj.');
+    } finally {
+      setSavingReport(false);
+    }
+  };
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -130,9 +218,116 @@ export default function VolunteerActivityDetailsScreen() {
             </Text>
           </View>
         ) : null}
+
+        {canEditReport ? (
+          <View style={styles.section}>
+            <Text style={styles.reportTitle}>Izveštaj sa aktivnosti</Text>
+            <Text style={styles.reportDescription}>
+              Dodajte kratak komentar i najviše četiri fotografije.
+            </Text>
+
+            <Text style={styles.inputLabel}>Komentar</Text>
+            <TextInput
+              value={comment}
+              onChangeText={setComment}
+              placeholder="Kratak opis realizacije..."
+              placeholderTextColor={Colors.textSecondary}
+              multiline
+              textAlignVertical="top"
+              style={styles.commentInput}
+            />
+
+            <View style={styles.photoHeader}>
+              <Text style={styles.inputLabel}>Fotografije ({photoCount}/4)</Text>
+              <Pressable
+                style={styles.addPhotoButton}
+                onPress={handleAddPhotos}
+                disabled={photoCount >= 4 || savingReport}
+              >
+                <Text style={styles.addPhotoButtonText}>+ Dodaj</Text>
+              </Pressable>
+            </View>
+
+            {photoCount > 0 ? (
+              <View style={styles.photoGrid}>
+                {visibleSavedPhotos.map(photo => (
+                  <PhotoPreview
+                    key={photo.id}
+                    uri={photo.url}
+                    onRemove={() =>
+                      setRemovedPhotos(currentPhotos => [
+                        ...currentPhotos,
+                        photo,
+                      ])
+                    }
+                  />
+                ))}
+                {newPhotoUris.map(uri => (
+                  <PhotoPreview
+                    key={uri}
+                    uri={uri}
+                    onRemove={() =>
+                      setNewPhotoUris(currentUris =>
+                        currentUris.filter(currentUri => currentUri !== uri)
+                      )
+                    }
+                  />
+                ))}
+              </View>
+            ) : (
+              <Text style={styles.emptyPhotosText}>
+                Nema dodatih fotografija.
+              </Text>
+            )}
+
+            <View style={styles.saveReportAction}>
+              <CustomButton
+                title="Sačuvaj izveštaj"
+                onPress={handleSaveReport}
+                loading={savingReport}
+              />
+            </View>
+          </View>
+        ) : null}
       </ScrollView>
     </SafeAreaView>
   );
+}
+
+type ReportPhoto = Photo & {
+  url: string;
+};
+
+function PhotoPreview({
+  uri,
+  onRemove,
+}: {
+  uri: string;
+  onRemove: () => void;
+}) {
+  return (
+    <View style={styles.photoPreview}>
+      <Image source={{ uri }} style={styles.photoImage} />
+      <Pressable style={styles.removePhotoButton} onPress={onRemove}>
+        <Text style={styles.removePhotoButtonText}>×</Text>
+      </Pressable>
+    </View>
+  );
+}
+
+async function loadReportPhotos(photos: Photo[]): Promise<ReportPhoto[]> {
+  return Promise.all(
+    photos.map(async photo => ({
+      ...photo,
+      url: await getPhotoDownloadUrl(photo.path),
+    }))
+  );
+}
+
+function hasActivityEnded(activity: Activity) {
+  const endDate = new Date(activity.endDateTime);
+
+  return !Number.isNaN(endDate.getTime()) && new Date() >= endDate;
 }
 
 function InfoRow({ label, value }: { label: string; value: string }) {
@@ -249,6 +444,93 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '700',
     color: Colors.error,
+  },
+  reportTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: Colors.textPrimary,
+  },
+  reportDescription: {
+    fontSize: 14,
+    lineHeight: 20,
+    color: Colors.textSecondary,
+    marginTop: 2,
+    marginBottom: Spacing.md,
+  },
+  inputLabel: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: Colors.textPrimary,
+  },
+  commentInput: {
+    minHeight: 96,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    borderRadius: 10,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    marginTop: Spacing.xs,
+    marginBottom: Spacing.md,
+    fontSize: 14,
+    color: Colors.textPrimary,
+  },
+  photoHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: Spacing.sm,
+  },
+  addPhotoButton: {
+    borderWidth: 1,
+    borderColor: Colors.primary,
+    borderRadius: 8,
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: 6,
+  },
+  addPhotoButtonText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: Colors.primary,
+  },
+  photoGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: Spacing.sm,
+    marginTop: Spacing.sm,
+  },
+  photoPreview: {
+    position: 'relative',
+  },
+  photoImage: {
+    width: 84,
+    height: 84,
+    borderRadius: 8,
+    backgroundColor: Colors.primaryLight,
+  },
+  removePhotoButton: {
+    position: 'absolute',
+    top: -6,
+    right: -6,
+    width: 22,
+    height: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 11,
+    backgroundColor: Colors.error,
+  },
+  removePhotoButtonText: {
+    fontSize: 18,
+    lineHeight: 20,
+    fontWeight: '700',
+    color: '#FFF',
+  },
+  emptyPhotosText: {
+    fontSize: 13,
+    color: Colors.textSecondary,
+    marginTop: Spacing.sm,
+  },
+  saveReportAction: {
+    marginTop: Spacing.md,
   },
   errorText: {
     fontSize: 14,

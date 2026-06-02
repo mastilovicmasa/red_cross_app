@@ -80,6 +80,7 @@ export default function InviteVolunteersScreen() {
         !loadedActivity ||
         loadedActivity.type !== 'EXTERNAL' ||
         loadedActivity.status !== 'ACTIVE' ||
+        hasActivityStarted(loadedActivity) ||
         loadedActivity.createdByUserId !== appUser.id ||
         appUser.role !== 'EMPLOYEE'
       ) {
@@ -207,6 +208,14 @@ export default function InviteVolunteersScreen() {
 
   const handleSendInvitations = () => {
     if (!activity || selectedVolunteerIds.length === 0) {
+      return;
+    }
+
+    if (hasActivityStarted(activity)) {
+      Alert.alert(
+        'Aktivnost je počela',
+        'Nove pozive nije moguće slati nakon početka aktivnosti.'
+      );
       return;
     }
 
@@ -584,6 +593,12 @@ function getBirthDateTimestamp(dateOfBirth: string) {
   const timestamp = new Date(dateOfBirth).getTime();
 
   return Number.isNaN(timestamp) ? 0 : timestamp;
+}
+
+function hasActivityStarted(activity: ExternalActivity) {
+  const startDate = new Date(activity.startDateTime);
+
+  return Number.isNaN(startDate.getTime()) || new Date() >= startDate;
 }
 
 const styles = StyleSheet.create({

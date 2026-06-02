@@ -25,7 +25,9 @@ function RootNavigation() {
       segments[0] === 'create-activity' ||
       segments[0] === 'edit-activity' ||
       segments[0] === 'invite-volunteers' ||
+      segments[0] === 'activity-responses' ||
       segments[0] === 'invitation' ||
+      segments[0] === 'volunteer-activity' ||
       segments[0] === 'activity' ||
       segments[0] === 'scan-attendance' ||
       segments[0] === 'edit-profile' ||

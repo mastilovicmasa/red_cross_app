@@ -116,6 +116,14 @@ export default function ActivityDetailsScreen() {
       return;
     }
 
+    if (hasActivityStarted(activity)) {
+      Alert.alert(
+        'Aktivnost je počela',
+        'Aktivnost više nije moguće otkazati nakon početka.'
+      );
+      return;
+    }
+
     Alert.alert(
       'Otkazivanje aktivnosti',
       'Da li ste sigurni da želite da otkažete ovu aktivnost?',
@@ -200,8 +208,8 @@ export default function ActivityDetailsScreen() {
         {canInviteVolunteers(activity, appUser?.id) ? (
           <Pressable
             style={({ pressed }) => [
-              styles.inviteVolunteersButton,
-              pressed ? styles.inviteVolunteersButtonPressed : null,
+              styles.externalActivityActionButton,
+              pressed ? styles.externalActivityActionButtonPressed : null,
             ]}
             onPress={() =>
               router.push({
@@ -211,8 +219,28 @@ export default function ActivityDetailsScreen() {
             }
           >
             <Ionicons name="people-outline" size={20} color="#FFF" />
-            <Text style={styles.inviteVolunteersButtonText}>
+            <Text style={styles.externalActivityActionButtonText}>
               Pozovi volontere
+            </Text>
+          </Pressable>
+        ) : null}
+
+        {canViewActivityResponses(activity, appUser?.id) ? (
+          <Pressable
+            style={({ pressed }) => [
+              styles.externalActivityActionButton,
+              pressed ? styles.externalActivityActionButtonPressed : null,
+            ]}
+            onPress={() =>
+              router.push({
+                pathname: '/activity-responses/[activityId]' as any,
+                params: { activityId: activity.id },
+              })
+            }
+          >
+            <Ionicons name="clipboard-outline" size={20} color="#FFF" />
+            <Text style={styles.externalActivityActionButtonText}>
+              Pregled odgovora
             </Text>
           </Pressable>
         ) : null}
@@ -266,13 +294,13 @@ function canCancelActivity(activity: Activity, userId?: string) {
     return false;
   }
 
-  const endDate = new Date(activity.endDateTime);
+  const startDate = new Date(activity.startDateTime);
 
-  if (Number.isNaN(endDate.getTime())) {
+  if (Number.isNaN(startDate.getTime())) {
     return false;
   }
 
-  return new Date() < endDate;
+  return new Date() < startDate;
 }
 
 function canManageExternalActivityDraft(activity: Activity, userId?: string) {
@@ -284,11 +312,31 @@ function canManageExternalActivityDraft(activity: Activity, userId?: string) {
 }
 
 function canInviteVolunteers(activity: Activity, userId?: string) {
+  if (
+    activity.type === 'EXTERNAL' &&
+    activity.status === 'ACTIVE' &&
+    activity.createdByUserId === userId
+  ) {
+    const startDate = new Date(activity.startDateTime);
+
+    return !Number.isNaN(startDate.getTime()) && new Date() < startDate;
+  }
+
+  return false;
+}
+
+function canViewActivityResponses(activity: Activity, userId?: string) {
   return (
     activity.type === 'EXTERNAL' &&
     activity.status === 'ACTIVE' &&
     activity.createdByUserId === userId
   );
+}
+
+function hasActivityStarted(activity: Activity) {
+  const startDate = new Date(activity.startDateTime);
+
+  return Number.isNaN(startDate.getTime()) || new Date() >= startDate;
 }
 
 function canEditActivity(activity: Activity, userId?: string) {
@@ -515,7 +563,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: Spacing.md,
   },
-  inviteVolunteersButton: {
+  externalActivityActionButton: {
     minHeight: 48,
     flexDirection: 'row',
     alignItems: 'center',
@@ -525,10 +573,10 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.primary,
     paddingHorizontal: Spacing.md,
   },
-  inviteVolunteersButtonPressed: {
+  externalActivityActionButtonPressed: {
     opacity: 0.85,
   },
-  inviteVolunteersButtonText: {
+  externalActivityActionButtonText: {
     fontSize: 16,
     fontWeight: '700',
     color: '#FFF',

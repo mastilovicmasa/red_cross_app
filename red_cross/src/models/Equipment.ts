@@ -9,16 +9,12 @@ export type EquipmentType = {
   category: EquipmentCategory;
 };
 
-export type EquipmentItemStatus =
-  | 'AVAILABLE'
-  | 'ISSUED'
-  | 'RETIRED';
-
-export type EquipmentItem = {
+export type EquipmentStock = {
   id: string;
   equipmentTypeId: string;
   size?: string;
-  status: EquipmentItemStatus;
+  totalQuantity: number;
+  availableQuantity: number;
   qrToken: string;
 };
 
@@ -27,8 +23,7 @@ export type EquipmentIssue = {
   issuedAt: string; // ISO string
   closedAt?: string; // ISO string
 
-  activityId?: string;
   issuedByUserId: string;
   issuedToUserId: string;
-  equipmentItemId: string;
+  equipmentStockId: string;
 };

@@ -1,4 +1,13 @@
-import { doc, getDoc, setDoc, updateDoc, collection, getDocs } from 'firebase/firestore';
+import {
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  query,
+  setDoc,
+  updateDoc,
+  where,
+} from 'firebase/firestore';
 
 import { db } from '@/firebase/firestore';
 import { AppUser } from '@/models/User';
@@ -25,6 +34,20 @@ export async function getUserById(userId: string): Promise<AppUser | null> {
   }
 
   return userSnapshot.data() as AppUser;
+}
+
+export async function getUserByQrToken(
+  qrToken: string
+): Promise<AppUser | null> {
+  const usersRef = collection(db, 'users');
+  const usersQuery = query(usersRef, where('qrToken', '==', qrToken));
+  const snapshot = await getDocs(usersQuery);
+
+  if (snapshot.empty) {
+    return null;
+  }
+
+  return snapshot.docs[0].data() as AppUser;
 }
 
 export async function updateUser(

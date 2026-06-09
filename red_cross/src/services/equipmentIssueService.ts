@@ -10,6 +10,7 @@ import {
 
 import { db } from '@/firebase/firestore';
 import { EquipmentIssue, EquipmentStock } from '@/models/Equipment';
+import { getUserById } from '@/services/userService';
 
 type IssueEquipmentParams = {
   issuedByUserId: string;
@@ -39,6 +40,16 @@ export async function issueEquipment({
 }: IssueEquipmentParams): Promise<EquipmentIssue[]> {
   if (quantity <= 0) {
     throw new Error('Kolicina za izdavanje mora biti veca od nule.');
+  }
+
+  const issuedToUser = await getUserById(issuedToUserId);
+
+  if (!issuedToUser) {
+    throw new Error('Korisnik kome se izdaje oprema ne postoji.');
+  }
+
+  if (issuedToUser.role === 'ADMIN') {
+    throw new Error('Oprema ne moze biti izdata administratoru.');
   }
 
   const equipmentStockRef = doc(db, 'equipmentStocks', equipmentStockId);
@@ -120,6 +131,14 @@ export async function returnEquipment(
       availableQuantity: equipmentStock.availableQuantity + 1,
     });
   });
+}
+
+export async function returnMultipleEquipment(
+  equipmentIssueIds: string[]
+): Promise<void> {
+  for (const equipmentIssueId of equipmentIssueIds) {
+    await returnEquipment(equipmentIssueId);
+  }
 }
 
 export async function getOpenEquipmentIssuesByUser(

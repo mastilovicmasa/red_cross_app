@@ -14,6 +14,12 @@ export async function createEquipmentType(
   equipmentType: EquipmentType
 ): Promise<void> {
   const equipmentTypeRef = doc(db, 'equipmentTypes', equipmentType.id);
+  const snapshot = await getDoc(equipmentTypeRef);
+
+  if (snapshot.exists()) {
+    throw new Error('Tip opreme sa zadatim identifikatorom vec postoji.');
+  }
+
   await setDoc(equipmentTypeRef, equipmentType);
 }
 

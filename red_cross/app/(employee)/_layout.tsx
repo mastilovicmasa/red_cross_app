@@ -81,6 +81,40 @@ export default function EmployeeTabsLayout() {
           ),
         }}
       />
+
+      <Tabs.Screen
+        name="equipment"
+        options={{
+          title: 'Oprema',
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="shirt-outline" size={size} color={color} />
+          ),
+        }}
+      />
+
+      <Tabs.Screen
+        name="equipment-volunteer/[userId]"
+        options={{
+          href: null,
+          title: 'Oprema volontera',
+        }}
+      />
+
+      <Tabs.Screen
+        name="issue-equipment"
+        options={{
+          href: null,
+          title: 'Izdaj opremu',
+        }}
+      />
+
+      <Tabs.Screen
+        name="return-equipment"
+        options={{
+          href: null,
+          title: 'Vrati opremu',
+        }}
+      />
     </Tabs>
   );
 }

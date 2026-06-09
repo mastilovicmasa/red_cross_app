@@ -80,6 +80,40 @@ export default function TabsLayout() {
           ),
         }}
       />
+
+      <Tabs.Screen
+        name="equipment"
+        options={{
+          title: 'Oprema',
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="shirt-outline" size={size} color={color} />
+          ),
+        }}
+      />
+
+      <Tabs.Screen
+        name="equipment-type-form"
+        options={{
+          href: null,
+          title: 'Novi tip opreme',
+        }}
+      />
+
+      <Tabs.Screen
+        name="equipment-stock-form"
+        options={{
+          href: null,
+          title: 'Nova lager stavka',
+        }}
+      />
+
+      <Tabs.Screen
+        name="equipment-stock-adjust/[stockId]"
+        options={{
+          href: null,
+          title: 'Korekcija lagera',
+        }}
+      />
     </Tabs>
   );
 }

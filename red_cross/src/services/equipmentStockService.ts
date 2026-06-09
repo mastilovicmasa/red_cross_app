@@ -23,6 +23,32 @@ export async function createEquipmentStock(
   }
 
   const equipmentStockRef = doc(db, 'equipmentStocks', equipmentStock.id);
+  const existingStockSnapshot = await getDoc(equipmentStockRef);
+
+  if (existingStockSnapshot.exists()) {
+    throw new Error('Lager stavka sa zadatim identifikatorom vec postoji.');
+  }
+
+  const existingStockWithQrToken = await getEquipmentStockByQrToken(
+    equipmentStock.qrToken
+  );
+
+  if (existingStockWithQrToken) {
+    throw new Error('QR kod je vec dodeljen drugoj lager stavci.');
+  }
+
+  const existingStocksByType = await getEquipmentStocksByType(
+    equipmentStock.equipmentTypeId
+  );
+  const normalizedIncomingSize = (equipmentStock.size ?? '').trim().toUpperCase();
+  const duplicateStock = existingStocksByType.find(
+    stock => (stock.size ?? '').trim().toUpperCase() === normalizedIncomingSize
+  );
+
+  if (duplicateStock) {
+    throw new Error('Lager stavka za izabrani tip i veličinu već postoji.');
+  }
+
   await setDoc(equipmentStockRef, equipmentStock);
 }
 

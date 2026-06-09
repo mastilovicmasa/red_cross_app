@@ -174,14 +174,16 @@ export default function EmployeeVolunteerEquipmentScreen() {
                         {stock?.size ? `Velicina ${stock.size}` : 'Bez velicine'}
                       </Text>
                     </View>
-
-                    <Ionicons
-                      name={
-                        isSelected ? 'checkbox-outline' : 'square-outline'
-                      }
-                      size={22}
-                      color={isSelected ? Colors.primary : Colors.textSecondary}
-                    />
+                    <View style={styles.issueHeaderActions}>
+                      <IssueAgeBadge issuedAt={issue.issuedAt} />
+                      <Ionicons
+                        name={
+                          isSelected ? 'checkbox-outline' : 'square-outline'
+                        }
+                        size={22}
+                        color={isSelected ? Colors.primary : Colors.textSecondary}
+                      />
+                    </View>
                   </View>
 
                   <Text style={styles.issueMeta}>
@@ -204,6 +206,57 @@ export default function EmployeeVolunteerEquipmentScreen() {
       </ScrollView>
     </SafeAreaView>
   );
+}
+
+function IssueAgeBadge({ issuedAt }: { issuedAt: string }) {
+  const ageInDays = getIssueAgeInDays(issuedAt);
+  const variant =
+    ageInDays < 5 ? 'fresh' : ageInDays < 10 ? 'warning' : 'overdue';
+
+  const label =
+    variant === 'fresh'
+      ? 'Sveze izdato'
+      : variant === 'warning'
+        ? 'Vratiti uskoro'
+        : 'Rok istekao';
+
+  return (
+    <View
+      style={[
+        styles.badge,
+        variant === 'fresh'
+          ? styles.badgeFresh
+          : variant === 'warning'
+            ? styles.badgeWarning
+            : styles.badgeOverdue,
+      ]}
+    >
+      <Text
+        style={[
+          styles.badgeText,
+          variant === 'fresh'
+            ? styles.badgeTextFresh
+            : variant === 'warning'
+              ? styles.badgeTextWarning
+              : styles.badgeTextOverdue,
+        ]}
+      >
+        {label}
+      </Text>
+    </View>
+  );
+}
+
+function getIssueAgeInDays(value: string) {
+  const issuedAt = new Date(value);
+
+  if (Number.isNaN(issuedAt.getTime())) {
+    return 0;
+  }
+
+  const millisecondsInDay = 1000 * 60 * 60 * 24;
+
+  return Math.floor((Date.now() - issuedAt.getTime()) / millisecondsInDay);
 }
 
 function formatDate(value: string) {
@@ -281,6 +334,10 @@ const styles = StyleSheet.create({
   issueInfo: {
     flex: 1,
   },
+  issueHeaderActions: {
+    alignItems: 'flex-end',
+    gap: Spacing.sm,
+  },
   issueTitle: {
     fontSize: 16,
     fontWeight: '700',
@@ -295,6 +352,33 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: Colors.textPrimary,
     marginTop: Spacing.sm,
+  },
+  badge: {
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+  },
+  badgeFresh: {
+    backgroundColor: '#E7F8EF',
+  },
+  badgeWarning: {
+    backgroundColor: '#FFF4DB',
+  },
+  badgeOverdue: {
+    backgroundColor: '#FDECEC',
+  },
+  badgeText: {
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  badgeTextFresh: {
+    color: '#1B7F46',
+  },
+  badgeTextWarning: {
+    color: '#B54708',
+  },
+  badgeTextOverdue: {
+    color: '#B42318',
   },
   actions: {
     marginTop: Spacing.sm,

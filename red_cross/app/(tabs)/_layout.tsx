@@ -82,6 +82,16 @@ export default function TabsLayout() {
       />
 
       <Tabs.Screen
+        name="equipment"
+        options={{
+          title: 'Oprema',
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="shirt-outline" size={size} color={color} />
+          ),
+        }}
+      />
+
+      <Tabs.Screen
         name="profile"
         options={{
           title: 'Profil',

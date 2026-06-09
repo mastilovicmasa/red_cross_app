@@ -20,6 +20,7 @@ import {
   EquipmentStock,
   EquipmentType,
 } from '@/models/Equipment';
+import { exportEquipmentQrCodesPdf } from '@/services/equipmentQrExportService';
 import { AppUser } from '@/models/User';
 import { getAllOpenEquipmentIssues } from '@/services/equipmentIssueService';
 import { getAllEquipmentStocks } from '@/services/equipmentStockService';
@@ -58,6 +59,7 @@ export default function EmployeeEquipmentScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState('');
+  const [exportingPdf, setExportingPdf] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
@@ -96,6 +98,15 @@ export default function EmployeeEquipmentScreen() {
   const handleRefresh = () => {
     setRefreshing(true);
     loadEquipmentData();
+  };
+
+  const handleExportPdf = async () => {
+    try {
+      setExportingPdf(true);
+      await exportEquipmentQrCodesPdf();
+    } finally {
+      setExportingPdf(false);
+    }
   };
 
   const equipmentTypeMap = useMemo(
@@ -202,6 +213,20 @@ export default function EmployeeEquipmentScreen() {
           <View>
             <View style={styles.header}>
               <Text style={styles.title}>Oprema</Text>
+              <Pressable
+                style={styles.pdfButton}
+                onPress={handleExportPdf}
+                disabled={exportingPdf}
+              >
+                <Ionicons
+                  name="download-outline"
+                  size={18}
+                  color={Colors.primary}
+                />
+                <Text style={styles.pdfButtonText}>
+                  {exportingPdf ? 'Generisanje...' : 'PDF kodovi'}
+                </Text>
+              </Pressable>
             </View>
 
             <View style={styles.headerButtonsRow}>
@@ -439,11 +464,32 @@ const styles = StyleSheet.create({
   },
   header: {
     marginBottom: Spacing.md,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: Spacing.md,
   },
   title: {
+    flex: 1,
     fontSize: 22,
     fontWeight: '700',
     color: Colors.textPrimary,
+  },
+  pdfButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    backgroundColor: '#FFF',
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+  },
+  pdfButtonText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: Colors.primary,
   },
   headerButtonsRow: {
     flexDirection: 'row',

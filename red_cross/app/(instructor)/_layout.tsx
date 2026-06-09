@@ -71,6 +71,16 @@ export default function InstructorTabsLayout() {
           ),
         }}
       />
+
+      <Tabs.Screen
+        name="equipment"
+        options={{
+          title: 'Oprema',
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="shirt-outline" size={size} color={color} />
+          ),
+        }}
+      />
     </Tabs>
   );
 }

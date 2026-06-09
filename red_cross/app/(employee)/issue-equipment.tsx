@@ -588,30 +588,42 @@ export default function IssueEquipmentScreen() {
             <View style={styles.section}>
               <View style={styles.sectionHeader}>
                 <Text style={styles.sectionTitle}>Stavke reversa</Text>
-                <View style={styles.headerButtons}>
-                  <Pressable
-                    style={styles.inlineAction}
-                    onPress={() => handleOpenScanner('STOCK')}
-                  >
+              </View>
+
+              <View style={styles.actionCardsRow}>
+                <Pressable
+                  style={({ pressed }) => [
+                    styles.actionCard,
+                    pressed ? styles.actionCardPressed : null,
+                  ]}
+                  onPress={() => handleOpenScanner('STOCK')}
+                >
+                  <View style={styles.actionCardContent}>
                     <Ionicons
-                      name="qr-code-outline"
-                      size={16}
+                      name="scan-outline"
+                      size={22}
                       color={Colors.primary}
                     />
-                    <Text style={styles.inlineActionText}>Skeniraj opremu</Text>
-                  </Pressable>
-                  <Pressable
-                    style={styles.inlineAction}
-                    onPress={() => setManualModalVisible(true)}
-                  >
+                    <Text style={styles.actionCardTitle}>Skeniraj</Text>
+                  </View>
+                </Pressable>
+
+                <Pressable
+                  style={({ pressed }) => [
+                    styles.actionCard,
+                    pressed ? styles.actionCardPressed : null,
+                  ]}
+                  onPress={() => setManualModalVisible(true)}
+                >
+                  <View style={styles.actionCardContent}>
                     <Ionicons
                       name="add-circle-outline"
-                      size={16}
+                      size={22}
                       color={Colors.primary}
                     />
-                    <Text style={styles.inlineActionText}>Dodaj rucno</Text>
-                  </Pressable>
-                </View>
+                    <Text style={styles.actionCardTitle}>Dodaj rucno</Text>
+                  </View>
+                </Pressable>
               </View>
 
               {draftLines.length === 0 ? (
@@ -812,10 +824,6 @@ const styles = StyleSheet.create({
     color: Colors.textPrimary,
     flex: 1,
   },
-  headerButtons: {
-    gap: Spacing.sm,
-    alignItems: 'flex-end',
-  },
   inlineAction: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -847,6 +855,34 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: Colors.textSecondary,
     lineHeight: 20,
+  },
+  actionCardsRow: {
+    flexDirection: 'row',
+    gap: Spacing.sm,
+    marginBottom: Spacing.md,
+  },
+  actionCard: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    borderRadius: 12,
+    padding: Spacing.md,
+    backgroundColor: '#FFF',
+    gap: 6,
+  },
+  actionCardPressed: {
+    opacity: 0.85,
+  },
+  actionCardContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  actionCardTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: Colors.primary,
   },
   draftList: {
     gap: Spacing.sm,

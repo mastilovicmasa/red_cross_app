@@ -21,16 +21,18 @@ import { useAuth } from '@/hooks/useAuth';
 import { Assignment } from '@/models/Assignment';
 import { Activity } from '@/models/Activity';
 import { Invitation, InvitationResponseStatus } from '@/models/Invitation';
-import { getActivityById } from '@/services/activityService';
+import { AppUser } from '@/models/User';
 import { getVolunteerAssignment } from '@/services/assignmentService';
+import { getActivityById } from '@/services/activityService';
 import {
   getVolunteerInvitation,
   respondToInvitation,
 } from '@/services/invitationService';
+import { getUserById } from '@/services/userService';
 
 const responseLabels: Record<InvitationResponseStatus, string> = {
-  PENDING: 'Čeka odgovor',
-  ACCEPTED: 'Prihvaćen',
+  PENDING: 'Ceka odgovor',
+  ACCEPTED: 'Prihvacen',
   DECLINED: 'Odbijen',
 };
 
@@ -38,6 +40,7 @@ export default function InvitationDetailsScreen() {
   const { appUser } = useAuth();
   const { activityId } = useLocalSearchParams<{ activityId: string }>();
   const [activity, setActivity] = useState<Activity | null>(null);
+  const [creator, setCreator] = useState<AppUser | null>(null);
   const [invitation, setInvitation] = useState<Invitation | null>(null);
   const [assignment, setAssignment] = useState<Assignment | null>(null);
   const [declineMessage, setDeclineMessage] = useState('');
@@ -52,7 +55,7 @@ export default function InvitationDetailsScreen() {
 
   const loadData = async () => {
     if (!activityId || !appUser?.id || appUser.role !== 'VOLUNTEER') {
-      setError('Poziv nije pronađen.');
+      setError('Poziv nije pronadjen.');
       setLoading(false);
       return;
     }
@@ -66,17 +69,20 @@ export default function InvitationDetailsScreen() {
       ]);
 
       if (!loadedActivity || !loadedInvitation) {
-        setError('Poziv nije pronađen.');
+        setError('Poziv nije pronadjen.');
         return;
       }
 
+      const loadedCreator = await getUserById(loadedActivity.createdByUserId);
+
       setActivity(loadedActivity);
+      setCreator(loadedCreator);
       setInvitation(loadedInvitation);
       setAssignment(loadedAssignment);
       setDeclineMessage(loadedInvitation.responseMessage ?? '');
     } catch (loadError) {
       console.error('Error loading invitation details:', loadError);
-      setError('Došlo je do greške prilikom učitavanja poziva.');
+      setError('Doslo je do greske prilikom ucitavanja poziva.');
     } finally {
       setLoading(false);
     }
@@ -89,7 +95,7 @@ export default function InvitationDetailsScreen() {
 
     Alert.alert(
       'Prihvatanje poziva',
-      'Da li želite da prihvatite poziv za ovu aktivnost?',
+      'Da li zelite da prihvatite poziv za ovu aktivnost?',
       [
         { text: 'Odustani', style: 'cancel' },
         {
@@ -125,7 +131,7 @@ export default function InvitationDetailsScreen() {
       await loadData();
     } catch (saveError) {
       console.error('Error responding to invitation:', saveError);
-      Alert.alert('Greška', 'Nije moguće sačuvati odgovor.');
+      Alert.alert('Greska', 'Nije moguce sacuvati odgovor.');
     } finally {
       setSaving(false);
     }
@@ -175,12 +181,16 @@ export default function InvitationDetailsScreen() {
             <Text style={styles.description}>{activity.description}</Text>
           ) : null}
 
-          <InfoRow label="Početak" value={formatDateTime(activity.startDateTime)} />
-          <InfoRow label="Završetak" value={formatDateTime(activity.endDateTime)} />
+          <InfoRow label="Pocetak" value={formatDateTime(activity.startDateTime)} />
+          <InfoRow label="Zavrsetak" value={formatDateTime(activity.endDateTime)} />
+          <InfoRow
+            label="Kreirao/la"
+            value={creator ? `${creator.firstName} ${creator.lastName}` : 'Kreator nije dostupan'}
+          />
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Vaš odgovor</Text>
+          <Text style={styles.sectionTitle}>Vas odgovor</Text>
           <View style={styles.responseBadge}>
             <Text style={styles.responseText}>
               {responseLabels[invitation.response]}
@@ -197,10 +207,10 @@ export default function InvitationDetailsScreen() {
           {isAssigned ? (
             <View style={styles.assignmentInfo}>
               <Text style={styles.assignmentInfoTitle}>
-                Potvrđeno vam je učešće na aktivnosti.
+                Potvrdeno vam je ucesce na aktivnosti.
               </Text>
               <Text style={styles.assignmentInfoText}>
-                U slučaju sprečenosti kontaktirajte zaposlenog.
+                U slucaju sprecenosti kontaktirajte zaposlenog.
               </Text>
             </View>
           ) : null}
@@ -220,7 +230,7 @@ export default function InvitationDetailsScreen() {
               >
                 <Text style={styles.actionButtonText}>
                   {invitation.response === 'ACCEPTED'
-                    ? 'Prihvaćen poziv ✓'
+                    ? 'Prihvacen poziv'
                     : 'Prihvati poziv'}
                 </Text>
               </Pressable>
@@ -238,14 +248,14 @@ export default function InvitationDetailsScreen() {
               >
                 <Text style={styles.actionButtonText}>
                   {invitation.response === 'DECLINED'
-                    ? 'Odbijen poziv ✓'
+                    ? 'Odbijen poziv'
                     : 'Odbij poziv'}
                 </Text>
               </Pressable>
             </View>
           ) : !isAssigned ? (
             <Text style={styles.inactiveText}>
-              Odgovor više nije moguće promeniti jer aktivnost nije aktivna.
+              Odgovor vise nije moguce promeniti jer aktivnost nije aktivna.
             </Text>
           ) : null}
         </View>
@@ -261,7 +271,7 @@ export default function InvitationDetailsScreen() {
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>Odbijanje poziva</Text>
             <Text style={styles.modalDescription}>
-              Možete ostaviti kratku poruku zaposlenom. Ovo polje nije obavezno.
+              Mozete ostaviti kratku poruku zaposlenom. Ovo polje nije obavezno.
             </Text>
 
             <TextInput
@@ -321,7 +331,7 @@ function formatDateTime(value: string) {
   const date = new Date(value);
 
   if (Number.isNaN(date.getTime())) {
-    return 'Datum nije podešen';
+    return 'Datum nije podesen';
   }
 
   const day = String(date.getDate()).padStart(2, '0');
@@ -352,8 +362,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     padding: Spacing.lg,
   },
-  header: {
-  },
+  header: {},
   screenTitle: {
     fontSize: 22,
     fontWeight: '700',

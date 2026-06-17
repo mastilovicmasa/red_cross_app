@@ -22,12 +22,14 @@ import { useAuth } from '@/hooks/useAuth';
 import { Assignment, AssignmentStatus } from '@/models/Assignment';
 import { Activity } from '@/models/Activity';
 import { Photo } from '@/models/Photo';
+import { AppUser } from '@/models/User';
 import {
   getAssignmentPhotos,
   saveActivityReport,
 } from '@/services/activityReportService';
 import { getVolunteerAssignment } from '@/services/assignmentService';
 import { getActivityById } from '@/services/activityService';
+import { getUserById } from '@/services/userService';
 
 const assignmentStatusLabels: Record<AssignmentStatus, string> = {
   ASSIGNED: 'Potvrdeno ucesce',
@@ -41,6 +43,7 @@ export default function VolunteerActivityDetailsScreen() {
   const { appUser } = useAuth();
   const { activityId } = useLocalSearchParams<{ activityId: string }>();
   const [activity, setActivity] = useState<Activity | null>(null);
+  const [creator, setCreator] = useState<AppUser | null>(null);
   const [assignment, setAssignment] = useState<Assignment | null>(null);
   const [comment, setComment] = useState('');
   const [savedPhotos, setSavedPhotos] = useState<ReportPhoto[]>([]);
@@ -73,7 +76,10 @@ export default function VolunteerActivityDetailsScreen() {
         return;
       }
 
+      const loadedCreator = await getUserById(loadedActivity.createdByUserId);
+
       setActivity(loadedActivity);
+      setCreator(loadedCreator);
       setAssignment(loadedAssignment);
       setComment(loadedAssignment.volunteerComment ?? '');
       setNewPhotoUris([]);
@@ -197,6 +203,10 @@ export default function VolunteerActivityDetailsScreen() {
           <InfoRow
             label="Status angazovanja"
             value={assignmentStatusLabels[assignment.status]}
+          />
+          <InfoRow
+            label="Kreirao/la"
+            value={creator ? `${creator.firstName} ${creator.lastName}` : 'Kreator nije dostupan'}
           />
         </View>
 

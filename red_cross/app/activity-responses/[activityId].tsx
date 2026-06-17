@@ -1,11 +1,8 @@
-import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
-  Image,
-  Linking,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -22,17 +19,12 @@ import { useAuth } from '@/hooks/useAuth';
 import { Assignment } from '@/models/Assignment';
 import { ExternalActivity } from '@/models/Activity';
 import { Invitation, InvitationResponseStatus } from '@/models/Invitation';
-import { Photo } from '@/models/Photo';
 import { AppUser } from '@/models/User';
 import {
   assignVolunteer,
   cancelVolunteerAssignment,
   getActivityAssignments,
 } from '@/services/assignmentService';
-import {
-  getAssignmentPhotos,
-  getPhotoDownloadUrl,
-} from '@/services/activityReportService';
 import { getActivityById } from '@/services/activityService';
 import { getActivityInvitations } from '@/services/invitationService';
 import { getAllUsers } from '@/services/userService';
@@ -41,7 +33,6 @@ type InvitationListItem = {
   invitation: Invitation;
   volunteer: AppUser;
   assignment?: Assignment;
-  reportPhotos: ReportPhoto[];
 };
 
 export default function ActivityResponsesScreen() {
@@ -61,7 +52,7 @@ export default function ActivityResponsesScreen() {
 
   const loadData = async () => {
     if (!activityId || !appUser?.id) {
-      setError('Aktivnost nije pronađena.');
+      setError('Aktivnost nije pronadjena.');
       setLoading(false);
       return;
     }
@@ -95,16 +86,6 @@ export default function ActivityResponsesScreen() {
           assignment,
         ])
       );
-      const photosByVolunteerId = new Map(
-        await Promise.all(
-          loadedAssignments.map(async assignment => [
-            assignment.volunteerId,
-            await loadReportPhotos(
-              await getAssignmentPhotos(activityId, assignment.volunteerId)
-            ),
-          ] as const)
-        )
-      );
 
       const loadedItems: InvitationListItem[] = [];
 
@@ -119,7 +100,6 @@ export default function ActivityResponsesScreen() {
           invitation,
           volunteer,
           assignment: assignmentsByVolunteerId.get(invitation.volunteerId),
-          reportPhotos: photosByVolunteerId.get(invitation.volunteerId) ?? [],
         });
       });
 
@@ -133,7 +113,7 @@ export default function ActivityResponsesScreen() {
       );
     } catch (loadError) {
       console.error('Error loading activity invitation responses:', loadError);
-      setError('Došlo je do greške prilikom učitavanja odgovora.');
+      setError('Doslo je do greske prilikom ucitavanja odgovora.');
     } finally {
       setLoading(false);
     }
@@ -161,22 +141,21 @@ export default function ActivityResponsesScreen() {
     [items]
   );
   const canManageTeam = !hasActivityStarted(activity);
-  const canViewReports = hasActivityEnded(activity);
 
   const handleAssignVolunteer = (item: InvitationListItem) => {
     if (!canManageTeam || hasActivityStarted(activity)) {
       Alert.alert(
-        'Tim je zaključan',
-        'Konačni tim nije moguće menjati nakon početka aktivnosti.'
+        'Tim je zakljucan',
+        'Konacni tim nije moguce menjati nakon pocetka aktivnosti.'
       );
       return;
     }
 
     Alert.alert(
       'Dodavanje u tim',
-      `Da li želite da dodate volontera ${formatVolunteerName(
+      `Da li zelite da dodate volontera ${formatVolunteerName(
         item.volunteer
-      )} u konačni tim?`,
+      )} u konacni tim?`,
       [
         { text: 'Odustani', style: 'cancel' },
         {
@@ -188,7 +167,7 @@ export default function ActivityResponsesScreen() {
               await loadData();
             } catch (saveError) {
               console.error('Error assigning volunteer:', saveError);
-              Alert.alert('Greška', 'Nije moguće dodati volontera u tim.');
+              Alert.alert('Greska', 'Nije moguce dodati volontera u tim.');
             } finally {
               setSavingVolunteerId(null);
             }
@@ -201,17 +180,17 @@ export default function ActivityResponsesScreen() {
   const handleCancelAssignment = (item: InvitationListItem) => {
     if (!canManageTeam || hasActivityStarted(activity)) {
       Alert.alert(
-        'Tim je zaključan',
-        'Konačni tim nije moguće menjati nakon početka aktivnosti.'
+        'Tim je zakljucan',
+        'Konacni tim nije moguce menjati nakon pocetka aktivnosti.'
       );
       return;
     }
 
     Alert.alert(
       'Uklanjanje iz tima',
-      `Da li želite da uklonite volontera ${formatVolunteerName(
+      `Da li zelite da uklonite volontera ${formatVolunteerName(
         item.volunteer
-      )} iz konačnog tima?`,
+      )} iz konacnog tima?`,
       [
         { text: 'Odustani', style: 'cancel' },
         {
@@ -224,7 +203,7 @@ export default function ActivityResponsesScreen() {
               await loadData();
             } catch (saveError) {
               console.error('Error cancelling volunteer assignment:', saveError);
-              Alert.alert('Greška', 'Nije moguće ukloniti volontera iz tima.');
+              Alert.alert('Greska', 'Nije moguce ukloniti volontera iz tima.');
             } finally {
               setSavingVolunteerId(null);
             }
@@ -272,15 +251,15 @@ export default function ActivityResponsesScreen() {
         {!canManageTeam ? (
           <View style={styles.readOnlyInfo}>
             <Text style={styles.readOnlyInfoText}>
-              Aktivnost je počela. Konačni tim je zaključan i dostupan samo za
+              Aktivnost je pocela. Konacni tim je zakljucan i dostupan samo za
               pregled.
             </Text>
           </View>
         ) : null}
 
         <ResponseSection
-          title={`Konačni tim (${assignedItems.length})`}
-          emptyText="Još uvek nema potvrđenih članova tima."
+          title={`Konacni tim (${assignedItems.length})`}
+          emptyText="Jos uvek nema potvrdjenih clanova tima."
           items={assignedItems}
           savingVolunteerId={savingVolunteerId}
           actionLabel={canManageTeam ? 'Ukloni iz tima' : undefined}
@@ -290,7 +269,7 @@ export default function ActivityResponsesScreen() {
 
         <ResponseSection
           title={`Prihvatili (${acceptedItems.length})`}
-          emptyText="Nema volontera koji čekaju dodavanje u tim."
+          emptyText="Nema volontera koji cekaju dodavanje u tim."
           items={acceptedItems}
           savingVolunteerId={savingVolunteerId}
           actionLabel={canManageTeam ? 'Dodaj u tim' : undefined}
@@ -298,8 +277,8 @@ export default function ActivityResponsesScreen() {
         />
 
         <ResponseSection
-          title={`Čekaju odgovor (${pendingItems.length})`}
-          emptyText="Nema poziva koji čekaju odgovor."
+          title={`Cekaju odgovor (${pendingItems.length})`}
+          emptyText="Nema poziva koji cekaju odgovor."
           items={pendingItems}
           savingVolunteerId={savingVolunteerId}
         />
@@ -310,69 +289,8 @@ export default function ActivityResponsesScreen() {
           items={declinedItems}
           savingVolunteerId={savingVolunteerId}
         />
-
-        {canViewReports ? <ReportSection items={assignedItems} /> : null}
       </ScrollView>
     </SafeAreaView>
-  );
-}
-
-type ReportPhoto = Photo & {
-  url: string;
-};
-
-function ReportSection({ items }: { items: InvitationListItem[] }) {
-  return (
-    <View style={styles.section}>
-      <Text style={styles.sectionTitle}>Izveštaji sa aktivnosti</Text>
-
-      {items.length > 0 ? (
-        <View style={styles.items}>
-          {items.map(item => (
-            <View key={item.volunteer.id} style={styles.reportItem}>
-              <Text style={styles.volunteerName}>
-                {formatVolunteerName(item.volunteer)}
-              </Text>
-
-              {item.assignment?.reportSubmittedAt ? (
-                <>
-                  <Text style={styles.reportStatusSubmitted}>
-                    Izveštaj je poslat
-                  </Text>
-                  <Text style={styles.reportComment}>
-                    {item.assignment.volunteerComment ||
-                      'Komentar nije dodat.'}
-                  </Text>
-
-                  {item.reportPhotos.length > 0 ? (
-                    <View style={styles.photoGrid}>
-                      {item.reportPhotos.map(photo => (
-                        <Pressable
-                          key={photo.id}
-                          onPress={() => Linking.openURL(photo.url)}
-                        >
-                          <Image source={{ uri: photo.url }} style={styles.photo} />
-                        </Pressable>
-                      ))}
-                    </View>
-                  ) : (
-                    <Text style={styles.emptyReportText}>
-                      Fotografije nisu dodate.
-                    </Text>
-                  )}
-                </>
-              ) : (
-                <Text style={styles.emptyReportText}>
-                  Izveštaj još nije poslat.
-                </Text>
-              )}
-            </View>
-          ))}
-        </View>
-      ) : (
-        <Text style={styles.emptyText}>Nema članova konačnog tima.</Text>
-      )}
-    </View>
   );
 }
 
@@ -445,7 +363,7 @@ function ResponseSection({
 function StatusBadge({ response }: { response: InvitationResponseStatus }) {
   const content = {
     PENDING: {
-      label: 'Čeka odgovor',
+      label: 'Ceka odgovor',
       badgeStyle: styles.pendingBadge,
       textStyle: styles.pendingText,
     },
@@ -480,25 +398,6 @@ function hasActivityStarted(activity: ExternalActivity | null) {
   const startDate = new Date(activity.startDateTime);
 
   return Number.isNaN(startDate.getTime()) || new Date() >= startDate;
-}
-
-function hasActivityEnded(activity: ExternalActivity | null) {
-  if (!activity) {
-    return false;
-  }
-
-  const endDate = new Date(activity.endDateTime);
-
-  return !Number.isNaN(endDate.getTime()) && new Date() >= endDate;
-}
-
-async function loadReportPhotos(photos: Photo[]): Promise<ReportPhoto[]> {
-  return Promise.all(
-    photos.map(async photo => ({
-      ...photo,
-      url: await getPhotoDownloadUrl(photo.path),
-    }))
-  );
 }
 
 const styles = StyleSheet.create({
@@ -582,40 +481,6 @@ const styles = StyleSheet.create({
     lineHeight: 18,
     color: Colors.textSecondary,
     marginTop: Spacing.xs,
-  },
-  reportItem: {
-    borderTopWidth: 1,
-    borderTopColor: Colors.border,
-    paddingTop: Spacing.sm,
-  },
-  reportStatusSubmitted: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: '#1B7F46',
-    marginTop: 2,
-  },
-  reportComment: {
-    fontSize: 13,
-    lineHeight: 18,
-    color: Colors.textPrimary,
-    marginTop: Spacing.sm,
-  },
-  emptyReportText: {
-    fontSize: 13,
-    color: Colors.textSecondary,
-    marginTop: Spacing.xs,
-  },
-  photoGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: Spacing.sm,
-    marginTop: Spacing.sm,
-  },
-  photo: {
-    width: 72,
-    height: 72,
-    borderRadius: 8,
-    backgroundColor: Colors.primaryLight,
   },
   actionButton: {
     minHeight: 36,

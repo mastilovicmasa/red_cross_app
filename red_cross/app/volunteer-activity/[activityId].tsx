@@ -24,17 +24,18 @@ import { Activity } from '@/models/Activity';
 import { Photo } from '@/models/Photo';
 import {
   getAssignmentPhotos,
-  getPhotoDownloadUrl,
   saveActivityReport,
 } from '@/services/activityReportService';
 import { getVolunteerAssignment } from '@/services/assignmentService';
 import { getActivityById } from '@/services/activityService';
 
 const assignmentStatusLabels: Record<AssignmentStatus, string> = {
-  ASSIGNED: 'Potvrđeno učešće',
-  CANCELLED: 'Otkazano angažovanje',
+  ASSIGNED: 'Potvrdeno ucesce',
+  CANCELLED: 'Otkazano angazovanje',
   COMPLETED: 'Realizovano',
 };
+
+type ReportPhoto = Photo;
 
 export default function VolunteerActivityDetailsScreen() {
   const { appUser } = useAuth();
@@ -44,7 +45,6 @@ export default function VolunteerActivityDetailsScreen() {
   const [comment, setComment] = useState('');
   const [savedPhotos, setSavedPhotos] = useState<ReportPhoto[]>([]);
   const [newPhotoUris, setNewPhotoUris] = useState<string[]>([]);
-  const [removedPhotos, setRemovedPhotos] = useState<Photo[]>([]);
   const [loading, setLoading] = useState(true);
   const [savingReport, setSavingReport] = useState(false);
   const [error, setError] = useState('');
@@ -55,7 +55,7 @@ export default function VolunteerActivityDetailsScreen() {
 
   const loadData = async () => {
     if (!activityId || !appUser?.id || appUser.role !== 'VOLUNTEER') {
-      setError('Aktivnost nije pronađena.');
+      setError('Aktivnost nije pronadjena.');
       setLoading(false);
       return;
     }
@@ -69,19 +69,18 @@ export default function VolunteerActivityDetailsScreen() {
       ]);
 
       if (!loadedActivity || !loadedAssignment) {
-        setError('Aktivnost nije pronađena.');
+        setError('Aktivnost nije pronadjena.');
         return;
       }
 
       setActivity(loadedActivity);
       setAssignment(loadedAssignment);
       setComment(loadedAssignment.volunteerComment ?? '');
-      setRemovedPhotos([]);
       setNewPhotoUris([]);
-      setSavedPhotos(await loadReportPhotos(loadedPhotos));
+      setSavedPhotos(loadedPhotos);
     } catch (loadError) {
       console.error('Error loading volunteer activity details:', loadError);
-      setError('Došlo je do greške prilikom učitavanja aktivnosti.');
+      setError('Doslo je do greske prilikom ucitavanja aktivnosti.');
     } finally {
       setLoading(false);
     }
@@ -108,18 +107,18 @@ export default function VolunteerActivityDetailsScreen() {
     );
   }
 
-  const canEditReport =
-    assignment.status === 'ASSIGNED' && hasActivityEnded(activity);
-  const visibleSavedPhotos = savedPhotos.filter(
-    photo => !removedPhotos.some(removedPhoto => removedPhoto.id === photo.id)
-  );
-  const photoCount = visibleSavedPhotos.length + newPhotoUris.length;
+  const canSubmitReport =
+    assignment.status === 'ASSIGNED' &&
+    hasActivityEnded(activity) &&
+    !assignment.reportSubmittedAt;
+  const hasSubmittedReport = Boolean(assignment.reportSubmittedAt);
+  const photoCount = newPhotoUris.length;
 
   const handleAddPhotos = async () => {
     const remainingPhotoCount = 4 - photoCount;
 
     if (remainingPhotoCount <= 0) {
-      Alert.alert('Ograničenje', 'Možete dodati najviše četiri fotografije.');
+      Alert.alert('Ogranicenje', 'Mozete dodati najvise cetiri fotografije.');
       return;
     }
 
@@ -129,7 +128,7 @@ export default function VolunteerActivityDetailsScreen() {
     if (!permission.granted) {
       Alert.alert(
         'Dozvola je potrebna',
-        'Omogućite pristup galeriji kako biste dodali fotografije.'
+        'Omogucite pristup galeriji kako biste dodali fotografije.'
       );
       return;
     }
@@ -163,13 +162,12 @@ export default function VolunteerActivityDetailsScreen() {
         volunteerId: appUser.id,
         volunteerComment: comment,
         newPhotoUris,
-        removedPhotos,
       });
       await loadData();
-      Alert.alert('Uspešno', 'Izveštaj je sačuvan.');
+      Alert.alert('Uspesno', 'Izvestaj je uspesno poslat.');
     } catch (saveError) {
       console.error('Error saving activity report:', saveError);
-      Alert.alert('Greška', 'Nije moguće sačuvati izveštaj.');
+      Alert.alert('Greska', 'Nije moguce poslati izvestaj.');
     } finally {
       setSavingReport(false);
     }
@@ -194,10 +192,10 @@ export default function VolunteerActivityDetailsScreen() {
             <Text style={styles.description}>{activity.description}</Text>
           ) : null}
 
-          <InfoRow label="Početak" value={formatDateTime(activity.startDateTime)} />
-          <InfoRow label="Završetak" value={formatDateTime(activity.endDateTime)} />
+          <InfoRow label="Pocetak" value={formatDateTime(activity.startDateTime)} />
+          <InfoRow label="Zavrsetak" value={formatDateTime(activity.endDateTime)} />
           <InfoRow
-            label="Status angažovanja"
+            label="Status angazovanja"
             value={assignmentStatusLabels[assignment.status]}
           />
         </View>
@@ -205,25 +203,53 @@ export default function VolunteerActivityDetailsScreen() {
         {assignment.status === 'ASSIGNED' ? (
           <View style={styles.assignmentInfo}>
             <Text style={styles.assignmentInfoTitle}>
-              Potvrđeno vam je učešće na aktivnosti.
+              Potvrdeno vam je ucesce na aktivnosti.
             </Text>
             <Text style={styles.assignmentInfoText}>
-              U slučaju sprečenosti kontaktirajte zaposlenog.
+              U slucaju sprecenosti kontaktirajte zaposlenog.
             </Text>
           </View>
         ) : assignment.status === 'CANCELLED' ? (
           <View style={styles.cancelledInfo}>
             <Text style={styles.cancelledInfoTitle}>
-              Vaše angažovanje na ovoj aktivnosti je otkazano.
+              Vase angazovanje na ovoj aktivnosti je otkazano.
             </Text>
           </View>
         ) : null}
 
-        {canEditReport ? (
+        {hasSubmittedReport ? (
           <View style={styles.section}>
-            <Text style={styles.reportTitle}>Izveštaj sa aktivnosti</Text>
+            <Text style={styles.reportTitle}>Poslat izvestaj</Text>
             <Text style={styles.reportDescription}>
-              Dodajte kratak komentar i najviše četiri fotografije.
+              Izvestaj je zakljucan nakon slanja i vise ga nije moguce menjati.
+            </Text>
+
+            <Text style={styles.inputLabel}>Komentar</Text>
+            <Text style={styles.readOnlyComment}>
+              {comment.trim() || 'Komentar nije dodat.'}
+            </Text>
+
+            <Text style={styles.inputLabel}>Fotografije ({savedPhotos.length}/4)</Text>
+            {savedPhotos.length > 0 ? (
+              <View style={styles.photoGrid}>
+                {savedPhotos.map(photo => (
+                  <PhotoPreview key={photo.id} uri={photo.url} />
+                ))}
+              </View>
+            ) : (
+              <Text style={styles.emptyPhotosText}>
+                Fotografije nisu dodate.
+              </Text>
+            )}
+          </View>
+        ) : null}
+
+        {canSubmitReport ? (
+          <View style={styles.section}>
+            <Text style={styles.reportTitle}>Izvestaj sa aktivnosti</Text>
+            <Text style={styles.reportDescription}>
+              Dodajte kratak komentar i najvise cetiri fotografije. Nakon
+              slanja izvestaj vise nije moguce menjati.
             </Text>
 
             <Text style={styles.inputLabel}>Komentar</Text>
@@ -250,18 +276,6 @@ export default function VolunteerActivityDetailsScreen() {
 
             {photoCount > 0 ? (
               <View style={styles.photoGrid}>
-                {visibleSavedPhotos.map(photo => (
-                  <PhotoPreview
-                    key={photo.id}
-                    uri={photo.url}
-                    onRemove={() =>
-                      setRemovedPhotos(currentPhotos => [
-                        ...currentPhotos,
-                        photo,
-                      ])
-                    }
-                  />
-                ))}
                 {newPhotoUris.map(uri => (
                   <PhotoPreview
                     key={uri}
@@ -282,7 +296,7 @@ export default function VolunteerActivityDetailsScreen() {
 
             <View style={styles.saveReportAction}>
               <CustomButton
-                title="Sačuvaj izveštaj"
+                title="Posalji izvestaj"
                 onPress={handleSaveReport}
                 loading={savingReport}
               />
@@ -294,33 +308,22 @@ export default function VolunteerActivityDetailsScreen() {
   );
 }
 
-type ReportPhoto = Photo & {
-  url: string;
-};
-
 function PhotoPreview({
   uri,
   onRemove,
 }: {
   uri: string;
-  onRemove: () => void;
+  onRemove?: () => void;
 }) {
   return (
     <View style={styles.photoPreview}>
       <Image source={{ uri }} style={styles.photoImage} />
-      <Pressable style={styles.removePhotoButton} onPress={onRemove}>
-        <Text style={styles.removePhotoButtonText}>×</Text>
-      </Pressable>
+      {onRemove ? (
+        <Pressable style={styles.removePhotoButton} onPress={onRemove}>
+          <Text style={styles.removePhotoButtonText}>x</Text>
+        </Pressable>
+      ) : null}
     </View>
-  );
-}
-
-async function loadReportPhotos(photos: Photo[]): Promise<ReportPhoto[]> {
-  return Promise.all(
-    photos.map(async photo => ({
-      ...photo,
-      url: await getPhotoDownloadUrl(photo.path),
-    }))
   );
 }
 
@@ -343,7 +346,7 @@ function formatDateTime(value: string) {
   const date = new Date(value);
 
   if (Number.isNaN(date.getTime())) {
-    return 'Datum nije podešen';
+    return 'Datum nije podesen';
   }
 
   const day = String(date.getDate()).padStart(2, '0');
@@ -461,6 +464,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '700',
     color: Colors.textPrimary,
+    marginTop: Spacing.md,
   },
   commentInput: {
     minHeight: 96,
@@ -472,6 +476,18 @@ const styles = StyleSheet.create({
     marginTop: Spacing.xs,
     marginBottom: Spacing.md,
     fontSize: 14,
+    color: Colors.textPrimary,
+  },
+  readOnlyComment: {
+    borderWidth: 1,
+    borderColor: Colors.border,
+    borderRadius: 10,
+    backgroundColor: '#FFF',
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    marginTop: Spacing.xs,
+    fontSize: 14,
+    lineHeight: 20,
     color: Colors.textPrimary,
   },
   photoHeader: {
@@ -519,8 +535,8 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.error,
   },
   removePhotoButtonText: {
-    fontSize: 18,
-    lineHeight: 20,
+    fontSize: 14,
+    lineHeight: 16,
     fontWeight: '700',
     color: '#FFF',
   },

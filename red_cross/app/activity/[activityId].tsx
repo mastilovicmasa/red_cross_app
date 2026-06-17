@@ -245,6 +245,26 @@ export default function ActivityDetailsScreen() {
           </Pressable>
         ) : null}
 
+        {canViewActivityReports(activity, appUser?.id) ? (
+          <Pressable
+            style={({ pressed }) => [
+              styles.externalActivityActionButton,
+              pressed ? styles.externalActivityActionButtonPressed : null,
+            ]}
+            onPress={() =>
+              router.push({
+                pathname: '/activity-reports/[activityId]' as any,
+                params: { activityId: activity.id },
+              })
+            }
+          >
+            <Ionicons name="images-outline" size={20} color="#FFF" />
+            <Text style={styles.externalActivityActionButtonText}>
+              Pregled izvestaja
+            </Text>
+          </Pressable>
+        ) : null}
+
         {canCancelActivity(activity, appUser?.id) ? (
           <Pressable
             style={({ pressed }) => [
@@ -330,6 +350,15 @@ function canViewActivityResponses(activity: Activity, userId?: string) {
     activity.type === 'EXTERNAL' &&
     activity.status === 'ACTIVE' &&
     activity.createdByUserId === userId
+  );
+}
+
+function canViewActivityReports(activity: Activity, userId?: string) {
+  return (
+    activity.type === 'EXTERNAL' &&
+    activity.status === 'ACTIVE' &&
+    activity.createdByUserId === userId &&
+    hasActivityStarted(activity)
   );
 }
 

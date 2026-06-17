@@ -26,6 +26,7 @@ function RootNavigation() {
       segments[0] === 'edit-activity' ||
       segments[0] === 'invite-volunteers' ||
       segments[0] === 'activity-responses' ||
+      segments[0] === 'activity-reports' ||
       segments[0] === 'invitation' ||
       segments[0] === 'volunteer-activity' ||
       segments[0] === 'activity' ||

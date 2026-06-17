@@ -1,20 +1,18 @@
 import {
   collection,
-  deleteDoc,
   doc,
+  getDoc,
   getDocs,
   setDoc,
   updateDoc,
 } from 'firebase/firestore';
-import {
-  deleteObject,
-  getDownloadURL,
-  ref,
-  uploadBytes,
-} from 'firebase/storage';
 
+import {
+  CLOUDINARY_CLOUD_NAME,
+  CLOUDINARY_UPLOAD_PRESET,
+} from '@/config/cloudinary';
 import { db } from '@/firebase/firestore';
-import { storage } from '@/firebase/storage';
+import { Assignment } from '@/models/Assignment';
 import { Photo } from '@/models/Photo';
 
 export async function getAssignmentPhotos(
@@ -34,22 +32,16 @@ export async function getAssignmentPhotos(
   return snapshot.docs.map(document => document.data() as Photo);
 }
 
-export async function getPhotoDownloadUrl(path: string): Promise<string> {
-  return getDownloadURL(ref(storage, path));
-}
-
 export async function saveActivityReport({
   activityId,
   volunteerId,
   volunteerComment,
   newPhotoUris,
-  removedPhotos,
 }: {
   activityId: string;
   volunteerId: string;
   volunteerComment: string;
   newPhotoUris: string[];
-  removedPhotos: Photo[];
 }): Promise<void> {
   const assignmentRef = doc(
     db,
@@ -58,36 +50,29 @@ export async function saveActivityReport({
     'assignments',
     volunteerId
   );
+  const assignmentSnapshot = await getDoc(assignmentRef);
 
-  for (const photo of removedPhotos) {
-    await deleteObject(ref(storage, photo.path));
-    await deleteDoc(
-      doc(
-        db,
-        'activities',
-        activityId,
-        'assignments',
-        volunteerId,
-        'photos',
-        photo.id
-      )
-    );
+  if (!assignmentSnapshot.exists()) {
+    throw new Error('Assignment does not exist.');
   }
 
-  for (const uri of newPhotoUris) {
+  const assignment = assignmentSnapshot.data() as Assignment;
+
+  if (assignment.reportSubmittedAt) {
+    throw new Error('Report has already been submitted.');
+  }
+
+  const uploadedPhotos = await Promise.all(
+    newPhotoUris.map(uri => uploadPhotoToCloudinary(uri, volunteerId))
+  );
+
+  for (const uploadedPhoto of uploadedPhotos) {
     const photoId = createPhotoId();
-    const path = `activity-reports/${activityId}/${volunteerId}/${photoId}.jpg`;
-    const response = await fetch(uri);
-    const blob = await response.blob();
-
-    await uploadBytes(ref(storage, path), blob, {
-      contentType: blob.type || 'image/jpeg',
-    });
-
     const photo: Photo = {
       id: photoId,
       assignmentId: volunteerId,
-      path,
+      publicId: uploadedPhoto.publicId,
+      url: uploadedPhoto.url,
     };
 
     await setDoc(
@@ -108,6 +93,67 @@ export async function saveActivityReport({
     volunteerComment: volunteerComment.trim(),
     reportSubmittedAt: new Date().toISOString(),
   });
+}
+
+async function uploadPhotoToCloudinary(uri: string, volunteerId: string) {
+  const formData = new FormData();
+  const fileName = extractFileName(uri);
+  const mimeType = inferMimeType(fileName);
+
+  formData.append('file', {
+    uri,
+    name: fileName,
+    type: mimeType,
+  } as unknown as Blob);
+  formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+  formData.append('folder', `activity-reports/${volunteerId}`);
+
+  const uploadResponse = await fetch(
+    `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`,
+    {
+      method: 'POST',
+      body: formData,
+    }
+  );
+
+  if (!uploadResponse.ok) {
+    throw new Error('Cloudinary upload failed.');
+  }
+
+  const payload = (await uploadResponse.json()) as {
+    public_id?: string;
+    secure_url?: string;
+  };
+
+  if (!payload.public_id || !payload.secure_url) {
+    throw new Error('Cloudinary upload response is incomplete.');
+  }
+
+  return {
+    publicId: payload.public_id,
+    url: payload.secure_url,
+  };
+}
+
+function extractFileName(uri: string) {
+  const segments = uri.split('/');
+  const candidate = segments[segments.length - 1];
+
+  return candidate && candidate.includes('.') ? candidate : 'report-photo.jpg';
+}
+
+function inferMimeType(fileName: string) {
+  const lowerCaseName = fileName.toLowerCase();
+
+  if (lowerCaseName.endsWith('.png')) {
+    return 'image/png';
+  }
+
+  if (lowerCaseName.endsWith('.jpg') || lowerCaseName.endsWith('.jpeg')) {
+    return 'image/jpeg';
+  }
+
+  return 'image/jpeg';
 }
 
 function createPhotoId() {

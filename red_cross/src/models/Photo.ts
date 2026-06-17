@@ -1,5 +1,6 @@
 export type Photo = {
   id: string;
   assignmentId: string;
-  path: string;
+  publicId: string;
+  url: string;
 };

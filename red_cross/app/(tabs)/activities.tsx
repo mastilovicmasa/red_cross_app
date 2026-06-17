@@ -82,7 +82,7 @@ export default function ActivitiesScreen() {
   );
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView edges={['top', 'left', 'right']} style={styles.safeArea}>
       <FlatList
         data={visibleItems}
         keyExtractor={item => item.assignment.id}

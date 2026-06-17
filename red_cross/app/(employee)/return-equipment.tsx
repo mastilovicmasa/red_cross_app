@@ -58,7 +58,7 @@ export default function ReturnEquipmentScreen() {
 
   if (!permission) {
     return (
-      <SafeAreaView style={styles.safeArea}>
+      <SafeAreaView edges={['top', 'left', 'right']} style={styles.safeArea}>
         <View style={styles.centerContent}>
           <Text style={styles.description}>Proverava se dozvola za kameru.</Text>
         </View>
@@ -68,7 +68,7 @@ export default function ReturnEquipmentScreen() {
 
   if (!permission.granted) {
     return (
-      <SafeAreaView style={styles.safeArea}>
+      <SafeAreaView edges={['top', 'left', 'right']} style={styles.safeArea}>
         <View style={styles.centerContent}>
           <Text style={styles.title}>Vrati opremu</Text>
           <Text style={styles.description}>
@@ -81,7 +81,7 @@ export default function ReturnEquipmentScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView edges={['top', 'left', 'right']} style={styles.safeArea}>
       <View style={styles.container}>
         <Text style={styles.title}>Skeniraj QR kod volontera</Text>
         <Text style={styles.description}>

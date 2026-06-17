@@ -123,7 +123,7 @@ export default function EmployeeVolunteerEquipmentScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView edges={['top', 'left', 'right']} style={styles.safeArea}>
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={styles.container}

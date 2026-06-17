@@ -121,7 +121,7 @@ export default function EquipmentStockFormScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView edges={['top', 'left', 'right']} style={styles.safeArea}>
       <Modal
         visible={typeModalVisible}
         transparent

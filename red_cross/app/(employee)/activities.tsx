@@ -97,7 +97,7 @@ export default function EmployeeActivitiesScreen() {
   }, [activities, search, selectedTab]);
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView edges={['top', 'left', 'right']} style={styles.safeArea}>
       <FlatList
         data={filteredActivities}
         keyExtractor={activity => activity.id}

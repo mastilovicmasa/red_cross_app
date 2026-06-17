@@ -82,7 +82,7 @@ export default function InvitationsScreen() {
   );
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView edges={['top', 'left', 'right']} style={styles.safeArea}>
       <FlatList
         data={visibleItems}
         keyExtractor={item => item.invitation.id}

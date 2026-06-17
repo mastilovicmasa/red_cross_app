@@ -198,7 +198,7 @@ export default function EmployeeEquipmentScreen() {
   );
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView edges={['top', 'left', 'right']} style={styles.safeArea}>
       <FlatList
         data={listData}
         keyExtractor={item =>

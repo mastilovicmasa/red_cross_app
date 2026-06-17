@@ -100,7 +100,7 @@ export default function AdminUsersScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView edges={['top', 'left', 'right']} style={styles.safeArea}>
       <Modal
         visible={roleModalVisible}
         transparent

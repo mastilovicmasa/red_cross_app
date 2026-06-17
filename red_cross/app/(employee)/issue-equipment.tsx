@@ -350,13 +350,13 @@ export default function IssueEquipmentScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView edges={['top', 'left', 'right']} style={styles.safeArea}>
       <Modal
         visible={scannerMode !== null}
         animationType="slide"
         onRequestClose={() => setScannerMode(null)}
       >
-        <SafeAreaView style={styles.safeArea}>
+        <SafeAreaView edges={['top', 'left', 'right']} style={styles.safeArea}>
           {!permission ? (
             <View style={styles.centerContent}>
               <Text style={styles.description}>Proverava se dozvola za kameru.</Text>

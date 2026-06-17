@@ -34,6 +34,8 @@ function RootNavigation() {
       segments[0] === 'edit-profile' ||
       segments[0] === 'manage-competencies' ||
       segments[0] === 'qr-code';
+    const isEmployeeLikeRole =
+      appUser?.role === 'EMPLOYEE' || appUser?.role === 'EXECUTIVE_BOARD';
 
     if (!firebaseUser && !inAuthScreen) {
       router.replace('/login');
@@ -43,7 +45,7 @@ function RootNavigation() {
     if (firebaseUser && appUser && inAuthScreen) {
       if (appUser.role === 'ADMIN') {
         router.replace('/(admin)' as any);
-      } else if (appUser.role === 'EMPLOYEE') {
+      } else if (isEmployeeLikeRole) {
         router.replace('/(employee)' as any);
       } else if (appUser.role === 'INSTRUCTOR') {
         router.replace('/(instructor)' as any);
@@ -64,7 +66,7 @@ function RootNavigation() {
       }
 
       if (
-        appUser.role === 'EMPLOYEE' &&
+        isEmployeeLikeRole &&
         !inEmployeeGroup &&
         !inUserCompetenciesScreen &&
         !inSharedProtectedScreen
@@ -84,7 +86,7 @@ function RootNavigation() {
 
       if (
         appUser.role !== 'ADMIN' &&
-        appUser.role !== 'EMPLOYEE' &&
+        !isEmployeeLikeRole &&
         appUser.role !== 'INSTRUCTOR' &&
         (inAdminGroup || inEmployeeGroup || inInstructorGroup)
       ) {

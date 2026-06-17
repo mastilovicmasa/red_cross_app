@@ -67,7 +67,7 @@ export default function ActivityResponsesScreen() {
         loadedActivity.type !== 'EXTERNAL' ||
         loadedActivity.status !== 'ACTIVE' ||
         loadedActivity.createdByUserId !== appUser.id ||
-        appUser.role !== 'EMPLOYEE'
+        (appUser.role !== 'EMPLOYEE' && appUser.role !== 'EXECUTIVE_BOARD')
       ) {
         setError('Nemate dozvolu za pregled odgovora za ovu aktivnost.');
         return;

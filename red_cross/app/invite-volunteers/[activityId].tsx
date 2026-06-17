@@ -82,7 +82,7 @@ export default function InviteVolunteersScreen() {
         loadedActivity.status !== 'ACTIVE' ||
         hasActivityStarted(loadedActivity) ||
         loadedActivity.createdByUserId !== appUser.id ||
-        appUser.role !== 'EMPLOYEE'
+        (appUser.role !== 'EMPLOYEE' && appUser.role !== 'EXECUTIVE_BOARD')
       ) {
         setError('Nemate dozvolu za slanje poziva za ovu aktivnost.');
         return;

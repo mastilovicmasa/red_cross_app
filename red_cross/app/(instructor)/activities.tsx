@@ -15,6 +15,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ActivityCard } from '@/components/activities/ActivityCard';
 import { HeaderIconButton } from '@/components/common/HeaderIconButton';
+import { SegmentedTabs } from '@/components/common/SegmentedTabs';
 import { Colors } from '@/constants/Colors';
 import { Spacing } from '@/constants/Spacing';
 import { useAuth } from '@/hooks/useAuth';
@@ -132,27 +133,14 @@ export default function InstructorActivitiesScreen() {
               />
             </View>
 
-            <View style={styles.tabs}>
-              {(Object.keys(tabLabels) as ActivityTab[]).map(tab => (
-                <Pressable
-                  key={tab}
-                  style={[
-                    styles.tab,
-                    selectedTab === tab ? styles.activeTab : null,
-                  ]}
-                  onPress={() => setSelectedTab(tab)}
-                >
-                  <Text
-                    style={[
-                      styles.tabText,
-                      selectedTab === tab ? styles.activeTabText : null,
-                    ]}
-                  >
-                    {tabLabels[tab]}
-                  </Text>
-                </Pressable>
-              ))}
-            </View>
+            <SegmentedTabs
+              options={(Object.keys(tabLabels) as ActivityTab[]).map(tab => ({
+                value: tab,
+                label: tabLabels[tab],
+              }))}
+              selectedValue={selectedTab}
+              onChange={setSelectedTab}
+            />
 
             {error ? <Text style={styles.errorText}>{error}</Text> : null}
           </View>
@@ -221,31 +209,6 @@ const styles = StyleSheet.create({
     marginLeft: Spacing.sm,
     fontSize: 14,
     color: Colors.textPrimary,
-  },
-  tabs: {
-    flexDirection: 'row',
-    backgroundColor: Colors.primaryLight,
-    borderRadius: 12,
-    padding: Spacing.xs,
-    marginBottom: Spacing.md,
-  },
-  tab: {
-    flex: 1,
-    minHeight: 36,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 8,
-  },
-  activeTab: {
-    backgroundColor: '#FFF',
-  },
-  tabText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: Colors.textSecondary,
-  },
-  activeTabText: {
-    color: Colors.primary,
   },
   loadingContainer: {
     paddingTop: Spacing.xl,

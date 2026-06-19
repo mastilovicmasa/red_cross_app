@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { SegmentedTabs } from '@/components/common/SegmentedTabs';
 import { Colors } from '@/constants/Colors';
 import { Spacing } from '@/constants/Spacing';
 import {
@@ -246,27 +247,14 @@ export default function EmployeeEquipmentScreen() {
               </Pressable>
             </View>
 
-            <View style={styles.tabs}>
-              {(Object.keys(tabLabels) as EmployeeEquipmentTab[]).map(tab => (
-                <Pressable
-                  key={tab}
-                  style={[
-                    styles.tab,
-                    selectedTab === tab ? styles.activeTab : null,
-                  ]}
-                  onPress={() => setSelectedTab(tab)}
-                >
-                  <Text
-                    style={[
-                      styles.tabText,
-                      selectedTab === tab ? styles.activeTabText : null,
-                    ]}
-                  >
-                    {tabLabels[tab]}
-                  </Text>
-                </Pressable>
-              ))}
-            </View>
+            <SegmentedTabs
+              options={(Object.keys(tabLabels) as EmployeeEquipmentTab[]).map(tab => ({
+                value: tab,
+                label: tabLabels[tab],
+              }))}
+              selectedValue={selectedTab}
+              onChange={setSelectedTab}
+            />
 
             {selectedTab === 'STOCK' ? (
               <View style={styles.section}>
@@ -529,32 +517,6 @@ const styles = StyleSheet.create({
     color: Colors.primary,
     fontSize: 13,
     fontWeight: '600',
-  },
-  tabs: {
-    flexDirection: 'row',
-    gap: Spacing.sm,
-    marginBottom: Spacing.lg,
-  },
-  tab: {
-    flex: 1,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    paddingVertical: 10,
-    alignItems: 'center',
-    backgroundColor: '#FFF',
-  },
-  activeTab: {
-    borderColor: Colors.primary,
-    backgroundColor: Colors.primaryLight,
-  },
-  tabText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: Colors.textSecondary,
-  },
-  activeTabText: {
-    color: Colors.primary,
   },
   section: {
     backgroundColor: '#FFF',

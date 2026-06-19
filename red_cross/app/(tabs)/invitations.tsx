@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { SegmentedTabs } from '@/components/common/SegmentedTabs';
 import { Colors } from '@/constants/Colors';
 import { Spacing } from '@/constants/Spacing';
 import { useAuth } from '@/hooks/useAuth';
@@ -105,27 +106,14 @@ export default function InvitationsScreen() {
               spremni.
             </Text>
 
-            <View style={styles.tabs}>
-              {(Object.keys(tabLabels) as InvitationTab[]).map(tab => (
-                <Pressable
-                  key={tab}
-                  style={[
-                    styles.tab,
-                    selectedTab === tab ? styles.activeTab : null,
-                  ]}
-                  onPress={() => setSelectedTab(tab)}
-                >
-                  <Text
-                    style={[
-                      styles.tabText,
-                      selectedTab === tab ? styles.activeTabText : null,
-                    ]}
-                  >
-                    {tabLabels[tab]}
-                  </Text>
-                </Pressable>
-              ))}
-            </View>
+            <SegmentedTabs
+              options={(Object.keys(tabLabels) as InvitationTab[]).map(tab => ({
+                value: tab,
+                label: tabLabels[tab],
+              }))}
+              selectedValue={selectedTab}
+              onChange={setSelectedTab}
+            />
 
             {error ? <Text style={styles.errorText}>{error}</Text> : null}
           </View>
@@ -264,31 +252,6 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
     marginTop: 2,
     marginBottom: Spacing.md,
-  },
-  tabs: {
-    flexDirection: 'row',
-    borderRadius: 12,
-    backgroundColor: Colors.primaryLight,
-    padding: Spacing.xs,
-    marginBottom: Spacing.md,
-  },
-  tab: {
-    flex: 1,
-    minHeight: 36,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 8,
-  },
-  activeTab: {
-    backgroundColor: '#FFF',
-  },
-  tabText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: Colors.textSecondary,
-  },
-  activeTabText: {
-    color: Colors.primary,
   },
   card: {
     borderWidth: 1,

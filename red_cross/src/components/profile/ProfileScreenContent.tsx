@@ -6,6 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Colors } from '@/constants/Colors';
 import { Spacing } from '@/constants/Spacing';
+import { ProfileAvatar } from '@/components/profile/ProfileAvatar';
 import { useAuth } from '@/hooks/useAuth';
 import { Competency } from '@/models/Competency';
 import { getAllCompetencies } from '@/services/competencyService';
@@ -48,7 +49,7 @@ export function ProfileScreenContent({
       >
         <View style={styles.header}>
           <View style={styles.avatar}>
-            <Ionicons name="person-outline" size={48} color={Colors.textSecondary} />
+            <ProfileAvatar imageUrl={appUser.profileImageUrl} size={104} />
           </View>
 
           <Text style={styles.name}>
@@ -226,13 +227,7 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.xl,
   },
   avatar: {
-    width: 104,
-    height: 104,
-    borderRadius: 52,
-    backgroundColor: Colors.primaryLight,
     marginBottom: Spacing.md,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   name: {
     fontSize: 22,

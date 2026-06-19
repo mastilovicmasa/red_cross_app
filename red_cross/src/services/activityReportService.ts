@@ -63,7 +63,7 @@ export async function saveActivityReport({
   }
 
   const uploadedPhotos = await Promise.all(
-    newPhotoUris.map(uri => uploadPhotoToCloudinary(uri, volunteerId))
+    newPhotoUris.map(uri => uploadPhotoToCloudinary(uri, activityId))
   );
 
   for (const uploadedPhoto of uploadedPhotos) {
@@ -95,7 +95,7 @@ export async function saveActivityReport({
   });
 }
 
-async function uploadPhotoToCloudinary(uri: string, volunteerId: string) {
+async function uploadPhotoToCloudinary(uri: string, activityId: string) {
   const formData = new FormData();
   const fileName = extractFileName(uri);
   const mimeType = inferMimeType(fileName);
@@ -106,7 +106,7 @@ async function uploadPhotoToCloudinary(uri: string, volunteerId: string) {
     type: mimeType,
   } as unknown as Blob);
   formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
-  formData.append('folder', `activity-reports/${volunteerId}`);
+  formData.append('asset_folder', `activity-reports/${activityId}`);
 
   const uploadResponse = await fetch(
     `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`,

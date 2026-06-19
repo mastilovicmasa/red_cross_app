@@ -34,10 +34,8 @@ export default function RegisterScreen() {
 
     try {
       setLoading(true);
-
       await signUp(email, password, firstName, lastName, gender);
-
-      Alert.alert('Uspešno', 'Nalog je uspešno kreiran.');
+      router.replace('/verify-email');
     } catch (error: any) {
       Alert.alert('Greška', error.message);
     } finally {

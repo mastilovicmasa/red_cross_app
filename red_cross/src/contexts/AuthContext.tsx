@@ -1,6 +1,8 @@
 import {
   createUserWithEmailAndPassword,
   onAuthStateChanged,
+  reload,
+  sendEmailVerification,
   signInWithEmailAndPassword,
   signOut as firebaseSignOut,
   User,
@@ -13,9 +15,12 @@ import { createUser, getUserById } from '@/services/userService';
 
 type AuthContextType = {
   firebaseUser: User | null;
+  emailVerified: boolean;
   appUser: AppUser | null;
   loading: boolean;
   refreshAppUser: () => Promise<void>;
+  refreshEmailVerificationStatus: () => Promise<boolean>;
+  resendVerificationEmail: () => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (
     email: string,
@@ -35,6 +40,7 @@ type AuthProviderProps = {
 
 export function AuthProvider({ children }: AuthProviderProps) {
   const [firebaseUser, setFirebaseUser] = useState<User | null>(null);
+  const [emailVerified, setEmailVerified] = useState(false);
   const [appUser, setAppUser] = useState<AppUser | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -49,6 +55,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     const unsubscribe = onAuthStateChanged(auth, async currentUser => {
       setLoading(true);
       setFirebaseUser(currentUser);
+      setEmailVerified(currentUser?.emailVerified ?? false);
 
       if (currentUser) {
         const firestoreUser = await getUserById(currentUser.uid);
@@ -66,9 +73,30 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const value = useMemo(
     () => ({
       firebaseUser,
+      emailVerified,
       appUser,
       loading,
       refreshAppUser,
+      refreshEmailVerificationStatus: async () => {
+        if (!auth.currentUser) {
+          setFirebaseUser(null);
+          setEmailVerified(false);
+          return false;
+        }
+
+        await reload(auth.currentUser);
+        setFirebaseUser(auth.currentUser);
+        setEmailVerified(auth.currentUser.emailVerified);
+
+        return auth.currentUser.emailVerified;
+      },
+      resendVerificationEmail: async () => {
+        if (!auth.currentUser) {
+          throw new Error('Korisnik nije prijavljen.');
+        }
+
+        await sendEmailVerification(auth.currentUser);
+      },
 
       signIn: async (email: string, password: string) => {
         await signInWithEmailAndPassword(auth, email, password);
@@ -104,6 +132,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
         await createUser(newAppUser);
         setAppUser(newAppUser);
+
+        try {
+          await sendEmailVerification(createdFirebaseUser);
+        } catch (error) {
+          console.error('Failed to send verification email:', error);
+        }
       },
 
       signOut: async () => {
@@ -111,7 +145,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         setAppUser(null);
       },
     }),
-    [firebaseUser, appUser, loading]
+    [firebaseUser, emailVerified, appUser, loading]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

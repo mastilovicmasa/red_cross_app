@@ -6,7 +6,7 @@ import { AuthProvider } from '@/contexts/AuthContext';
 import { useAuth } from '@/hooks/useAuth';
 
 function RootNavigation() {
-  const { firebaseUser, appUser, loading } = useAuth();
+  const { firebaseUser, emailVerified, appUser, loading } = useAuth();
   const router = useRouter();
   const segments = useSegments();
 
@@ -15,9 +15,9 @@ function RootNavigation() {
 
     const inAuthScreen =
       segments[0] === 'login' || segments[0] === 'register';
+    const inVerifyEmailScreen = segments[0] === 'verify-email';
 
     const inAdminGroup = segments[0] === '(admin)';
-    const inTabsGroup = segments[0] === '(tabs)';
     const inUserCompetenciesScreen = segments[0] === 'user-competencies';
     const inEmployeeGroup = segments[0] === '(employee)';
     const inInstructorGroup = segments[0] === '(instructor)';
@@ -39,6 +39,26 @@ function RootNavigation() {
 
     if (!firebaseUser && !inAuthScreen) {
       router.replace('/login');
+      return;
+    }
+
+    if (firebaseUser && !emailVerified) {
+      if (!inVerifyEmailScreen) {
+        router.replace('/verify-email');
+      }
+      return;
+    }
+
+    if (firebaseUser && emailVerified && inVerifyEmailScreen && appUser) {
+      if (appUser.role === 'ADMIN') {
+        router.replace('/(admin)' as any);
+      } else if (isEmployeeLikeRole) {
+        router.replace('/(employee)' as any);
+      } else if (appUser.role === 'INSTRUCTOR') {
+        router.replace('/(instructor)' as any);
+      } else {
+        router.replace('/(tabs)' as any);
+      }
       return;
     }
 
@@ -94,7 +114,7 @@ function RootNavigation() {
         return;
       }
     }
-  }, [firebaseUser, appUser, loading, segments, router]);
+  }, [firebaseUser, emailVerified, appUser, loading, segments, router]);
 
   if (loading) {
     return (

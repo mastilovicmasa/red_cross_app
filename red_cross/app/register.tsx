@@ -10,19 +10,21 @@ import { Spacing } from '@/constants/Spacing';
 import { globalStyles } from '@/constants/globalStyles';
 import { useAuth } from '@/hooks/useAuth';
 import { Gender } from '@/models/User';
+import { getFirebaseAuthErrorMessage } from '@/utils/firebaseAuthErrorMessage';
 
 export default function RegisterScreen() {
   const { signUp } = useAuth();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [gender, setGender] = useState<Gender>('MALE');
   const [loading, setLoading] = useState(false);
 
   const handleRegister = async () => {
-    if (!email || !password || !firstName || !lastName) {
+    if (!email || !password || !confirmPassword || !firstName || !lastName) {
       Alert.alert('Greška', 'Popunite sva obavezna polja.');
       return;
     }
@@ -32,12 +34,20 @@ export default function RegisterScreen() {
       return;
     }
 
+    if (password !== confirmPassword) {
+      Alert.alert('Greška', 'Lozinke se ne poklapaju.');
+      return;
+    }
+
     try {
       setLoading(true);
       await signUp(email, password, firstName, lastName, gender);
       router.replace('/verify-email');
-    } catch (error: any) {
-      Alert.alert('Greška', error.message);
+    } catch (error) {
+      Alert.alert(
+        'Greška',
+        getFirebaseAuthErrorMessage(error, 'Registracija nije uspela.')
+      );
     } finally {
       setLoading(false);
     }
@@ -79,6 +89,14 @@ export default function RegisterScreen() {
           value={password}
           onChangeText={setPassword}
           placeholder="Unesite lozinku"
+          secureTextEntry
+        />
+
+        <CustomInput
+          label="Potvrdite lozinku"
+          value={confirmPassword}
+          onChangeText={setConfirmPassword}
+          placeholder="Ponovo unesite lozinku"
           secureTextEntry
         />
 

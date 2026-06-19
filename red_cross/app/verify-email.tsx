@@ -7,6 +7,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors } from '@/constants/Colors';
 import { Spacing } from '@/constants/Spacing';
 import { useAuth } from '@/hooks/useAuth';
+import { getFirebaseAuthErrorMessage } from '@/utils/firebaseAuthErrorMessage';
 
 type NoticeType = 'info' | 'success' | 'error';
 
@@ -38,10 +39,13 @@ export default function VerifyEmailScreen() {
           text: 'Email još nije potvrđen. Otvorite poruku iz inbox-a i kliknite na link, pa se zatim vratite ovde.',
         });
       }
-    } catch (error: any) {
+    } catch (error) {
       setNotice({
         type: 'error',
-        text: error.message ?? 'Provera statusa nije uspela.',
+        text: getFirebaseAuthErrorMessage(
+          error,
+          'Provera statusa nije uspela.'
+        ),
       });
     } finally {
       setChecking(false);
@@ -56,10 +60,13 @@ export default function VerifyEmailScreen() {
         type: 'success',
         text: 'Poslali smo novi link za verifikaciju. Ako ga ne vidite odmah, proverite i spam folder.',
       });
-    } catch (error: any) {
+    } catch (error) {
       setNotice({
         type: 'error',
-        text: error.message ?? 'Slanje verifikacionog emaila nije uspelo.',
+        text: getFirebaseAuthErrorMessage(
+          error,
+          'Slanje verifikacionog emaila nije uspelo.'
+        ),
       });
     } finally {
       setResending(false);

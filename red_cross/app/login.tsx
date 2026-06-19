@@ -9,13 +9,15 @@ import { Colors } from '@/constants/Colors';
 import { Spacing } from '@/constants/Spacing';
 import { globalStyles } from '@/constants/globalStyles';
 import { useAuth } from '@/hooks/useAuth';
+import { getFirebaseAuthErrorMessage } from '@/utils/firebaseAuthErrorMessage';
 
 export default function LoginScreen() {
-  const { signIn } = useAuth();
+  const { signIn, sendResetPasswordEmail } = useAuth();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [resetLoading, setResetLoading] = useState(false);
 
   const handleSignIn = async () => {
     if (!email || !password) {
@@ -26,11 +28,43 @@ export default function LoginScreen() {
     try {
       setLoading(true);
       await signIn(email, password);
-    } catch (error: any) {
+    } catch (error) {
       console.log(error);
-      Alert.alert('Greška', 'Prijava nije uspela: ' + error.message);
+      Alert.alert(
+        'Greška',
+        getFirebaseAuthErrorMessage(error, 'Prijava nije uspela.')
+      );
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handlePasswordReset = async () => {
+    if (!email.trim()) {
+      Alert.alert(
+        'Email je obavezan',
+        'Unesite email adresu kako bismo poslali link za reset lozinke.'
+      );
+      return;
+    }
+
+    try {
+      setResetLoading(true);
+      await sendResetPasswordEmail(email.trim());
+      Alert.alert(
+        'Link je poslat',
+        'Proverite email i pratite uputstvo za promenu lozinke.'
+      );
+    } catch (error) {
+      Alert.alert(
+        'Greška',
+        getFirebaseAuthErrorMessage(
+          error,
+          'Slanje linka za reset lozinke nije uspelo.'
+        )
+      );
+    } finally {
+      setResetLoading(false);
     }
   };
 
@@ -60,6 +94,20 @@ export default function LoginScreen() {
           secureTextEntry
         />
 
+        <Pressable
+          onPress={handlePasswordReset}
+          disabled={resetLoading}
+          style={({ pressed }) => [
+            styles.resetLinkWrap,
+            pressed ? styles.resetLinkPressed : null,
+            resetLoading ? styles.resetLinkDisabled : null,
+          ]}
+        >
+          <Text style={styles.resetLink}>
+            {resetLoading ? 'Šaljemo link...' : 'Zaboravljena lozinka?'}
+          </Text>
+        </Pressable>
+
         <CustomButton
           title="Prijavi se"
           onPress={handleSignIn}
@@ -88,6 +136,22 @@ const styles = StyleSheet.create({
     fontSize: 15,
     marginBottom: Spacing.xl,
     lineHeight: 22,
+  },
+  resetLinkWrap: {
+    alignSelf: 'flex-end',
+    marginTop: -Spacing.xs,
+    marginBottom: Spacing.lg,
+  },
+  resetLinkPressed: {
+    opacity: 0.75,
+  },
+  resetLinkDisabled: {
+    opacity: 0.6,
+  },
+  resetLink: {
+    fontSize: 14,
+    color: Colors.primary,
+    fontWeight: '600',
   },
   registerRow: {
     flexDirection: 'row',

@@ -2,6 +2,7 @@ import {
   createUserWithEmailAndPassword,
   onAuthStateChanged,
   reload,
+  sendPasswordResetEmail,
   sendEmailVerification,
   signInWithEmailAndPassword,
   signOut as firebaseSignOut,
@@ -21,6 +22,7 @@ type AuthContextType = {
   refreshAppUser: () => Promise<void>;
   refreshEmailVerificationStatus: () => Promise<boolean>;
   resendVerificationEmail: () => Promise<void>;
+  sendResetPasswordEmail: (email: string) => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (
     email: string,
@@ -96,6 +98,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
         }
 
         await sendEmailVerification(auth.currentUser);
+      },
+      sendResetPasswordEmail: async (email: string) => {
+        await sendPasswordResetEmail(auth, email);
       },
 
       signIn: async (email: string, password: string) => {

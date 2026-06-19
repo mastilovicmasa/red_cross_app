@@ -27,7 +27,10 @@ import {
   getAssignmentPhotos,
   saveActivityReport,
 } from '@/services/activityReportService';
-import { getVolunteerAssignment } from '@/services/assignmentService';
+import {
+  getActivityAssignments,
+  getVolunteerAssignment,
+} from '@/services/assignmentService';
 import { getActivityById } from '@/services/activityService';
 import { getUserById } from '@/services/userService';
 
@@ -38,6 +41,7 @@ const assignmentStatusLabels: Record<AssignmentStatus, string> = {
 };
 
 type ReportPhoto = Photo;
+type TeamMember = Pick<AppUser, 'id' | 'firstName' | 'lastName' | 'phoneNumber'>;
 
 export default function VolunteerActivityDetailsScreen() {
   const { appUser } = useAuth();
@@ -46,6 +50,7 @@ export default function VolunteerActivityDetailsScreen() {
   const [creator, setCreator] = useState<AppUser | null>(null);
   const [assignment, setAssignment] = useState<Assignment | null>(null);
   const [comment, setComment] = useState('');
+  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
   const [savedPhotos, setSavedPhotos] = useState<ReportPhoto[]>([]);
   const [newPhotoUris, setNewPhotoUris] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
@@ -77,11 +82,39 @@ export default function VolunteerActivityDetailsScreen() {
       }
 
       const loadedCreator = await getUserById(loadedActivity.createdByUserId);
+      let loadedTeamMembers: TeamMember[] = [];
+
+      if (loadedActivity.type === 'EXTERNAL') {
+        const allAssignments = await getActivityAssignments(activityId);
+        const activeAssignments = allAssignments.filter(
+          currentAssignment => currentAssignment.status !== 'CANCELLED'
+        );
+        const users = await Promise.all(
+          activeAssignments.map(currentAssignment =>
+            getUserById(currentAssignment.volunteerId)
+          )
+        );
+
+        loadedTeamMembers = users
+          .filter((user): user is AppUser => Boolean(user))
+          .map(user => ({
+            id: user.id,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            phoneNumber: user.phoneNumber,
+          }))
+          .sort((first, second) =>
+            `${first.firstName} ${first.lastName}`.localeCompare(
+              `${second.firstName} ${second.lastName}`
+            )
+          );
+      }
 
       setActivity(loadedActivity);
       setCreator(loadedCreator);
       setAssignment(loadedAssignment);
       setComment(loadedAssignment.volunteerComment ?? '');
+      setTeamMembers(loadedTeamMembers);
       setNewPhotoUris([]);
       setSavedPhotos(loadedPhotos);
     } catch (loadError) {
@@ -209,6 +242,31 @@ export default function VolunteerActivityDetailsScreen() {
             value={creator ? `${creator.firstName} ${creator.lastName}` : 'Kreator nije dostupan'}
           />
         </View>
+
+        {activity.type === 'EXTERNAL' ? (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Tim</Text>
+
+            {teamMembers.length > 0 ? (
+              <View style={styles.teamList}>
+                {teamMembers.map(teamMember => (
+                  <View key={teamMember.id} style={styles.teamMemberCard}>
+                    <Text style={styles.teamMemberName}>
+                      {teamMember.firstName} {teamMember.lastName}
+                    </Text>
+                    <Text style={styles.teamMemberPhone}>
+                      {teamMember.phoneNumber || 'Telefon nije unet'}
+                    </Text>
+                  </View>
+                ))}
+              </View>
+            ) : (
+              <Text style={styles.emptyPhotosText}>
+                Trenutno nema prikazanih članova tima.
+              </Text>
+            )}
+          </View>
+        ) : null}
 
         {assignment.status === 'ASSIGNED' ? (
           <View style={styles.assignmentInfo}>
@@ -404,6 +462,12 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: Colors.textPrimary,
   },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: Colors.textPrimary,
+    marginBottom: Spacing.md,
+  },
   location: {
     fontSize: 14,
     color: Colors.textSecondary,
@@ -446,6 +510,26 @@ const styles = StyleSheet.create({
     fontSize: 13,
     lineHeight: 18,
     color: '#1B7F46',
+    marginTop: 2,
+  },
+  teamList: {
+    gap: Spacing.sm,
+  },
+  teamMemberCard: {
+    borderWidth: 1,
+    borderColor: Colors.border,
+    borderRadius: 10,
+    padding: Spacing.sm,
+    backgroundColor: Colors.primaryLight,
+  },
+  teamMemberName: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: Colors.textPrimary,
+  },
+  teamMemberPhone: {
+    fontSize: 13,
+    color: Colors.textSecondary,
     marginTop: 2,
   },
   cancelledInfo: {

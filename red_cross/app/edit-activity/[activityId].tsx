@@ -17,6 +17,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { DatePickerButton } from '@/components/activities/DatePickerButton';
+import { BackButton } from '@/components/common/BackButton';
 import CustomButton from '@/components/common/CustomButton';
 import CustomInput from '@/components/common/CustomInput';
 import { Colors } from '@/constants/Colors';
@@ -279,6 +280,7 @@ export default function EditActivityScreen() {
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
+        <BackButton onPress={returnToActivityDetails} />
         <Text style={styles.title}>Izmena aktivnosti</Text>
         <Text style={styles.subtitle}>
           {activity?.type === 'EXTERNAL'
@@ -401,6 +403,7 @@ const styles = StyleSheet.create({
     fontSize: 22,
     fontWeight: '700',
     color: Colors.textPrimary,
+    marginTop: Spacing.md,
   },
   subtitle: {
     fontSize: 14,

@@ -15,6 +15,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ActivityInfoSection } from '@/components/activities/ActivityInfoSection';
 import { ExternalActivityRequirementsSection } from '@/components/activities/ExternalActivityRequirementsSection';
+import { BackButton } from '@/components/common/BackButton';
 import { Colors } from '@/constants/Colors';
 import { Spacing } from '@/constants/Spacing';
 import { useAuth } from '@/hooks/useAuth';
@@ -182,6 +183,7 @@ export default function ActivityDetailsScreen() {
         contentContainerStyle={styles.container}
         showsVerticalScrollIndicator={false}
       >
+        <BackButton onPress={() => router.back()} />
         <View style={styles.screenHeader}>
           <Text style={styles.screenTitle}>Detalji aktivnosti</Text>
 
@@ -576,6 +578,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: Spacing.md,
+    marginTop: Spacing.md,
   },
   section: {
     backgroundColor: '#FFF',

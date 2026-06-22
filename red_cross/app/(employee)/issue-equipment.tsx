@@ -17,6 +17,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { BackButton } from '@/components/common/BackButton';
 import CustomButton from '@/components/common/CustomButton';
 import CustomInput from '@/components/common/CustomInput';
 import { Colors } from '@/constants/Colors';
@@ -545,6 +546,7 @@ export default function IssueEquipmentScreen() {
         contentContainerStyle={styles.container}
         showsVerticalScrollIndicator={false}
       >
+        <BackButton onPress={() => router.replace('/(employee)/equipment' as any)} />
         <Text style={styles.title}>Izdaj opremu</Text>
         <Text style={styles.description}>
           Skenirajte QR kod volontera, zatim dodajte jednu ili vise stavki na
@@ -771,6 +773,7 @@ const styles = StyleSheet.create({
     fontSize: 22,
     fontWeight: '700',
     color: Colors.textPrimary,
+    marginTop: Spacing.md,
     marginBottom: Spacing.sm,
   },
   description: {

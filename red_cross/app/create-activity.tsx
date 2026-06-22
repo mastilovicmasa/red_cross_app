@@ -16,6 +16,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { DatePickerButton } from '@/components/activities/DatePickerButton';
+import { BackButton } from '@/components/common/BackButton';
 import CustomButton from '@/components/common/CustomButton';
 import CustomInput from '@/components/common/CustomInput';
 import { Colors } from '@/constants/Colors';
@@ -195,6 +196,7 @@ export default function CreateActivityScreen() {
     return (
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.noAccessContainer}>
+          <BackButton onPress={returnToActivities} />
           <Text style={styles.title}>Nova aktivnost</Text>
           <Text style={styles.noAccessText}>
             Nemate dozvolu za kreiranje aktivnosti.
@@ -305,6 +307,7 @@ export default function CreateActivityScreen() {
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
+        <BackButton onPress={returnToActivities} />
         <Text style={styles.title}>Nova aktivnost</Text>
         <Text style={styles.subtitle}>Unesite osnovne podatke o aktivnosti.</Text>
 
@@ -434,6 +437,7 @@ const styles = StyleSheet.create({
     fontSize: 22,
     fontWeight: '700',
     color: Colors.textPrimary,
+    marginTop: Spacing.md,
   },
   subtitle: {
     fontSize: 14,
@@ -521,7 +525,6 @@ const styles = StyleSheet.create({
   noAccessContainer: {
     flex: 1,
     padding: Spacing.lg,
-    justifyContent: 'center',
   },
   noAccessText: {
     fontSize: 14,

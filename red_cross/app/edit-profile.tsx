@@ -16,6 +16,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { BackButton } from '@/components/common/BackButton';
 import CustomButton from '@/components/common/CustomButton';
 import CustomInput from '@/components/common/CustomInput';
 import { ProfileAvatar } from '@/components/profile/ProfileAvatar';
@@ -130,6 +131,7 @@ export default function EditProfileScreen() {
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
+        <BackButton onPress={() => router.back()} />
         <Text style={globalStyles.title}>Izmena profila</Text>
 
         <Text style={styles.subtitle}>
@@ -238,7 +240,7 @@ const styles = StyleSheet.create({
   },
   content: {
     paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.xl,
+    paddingTop: Spacing.lg,
     paddingBottom: Spacing.xl,
   },
   subtitle: {

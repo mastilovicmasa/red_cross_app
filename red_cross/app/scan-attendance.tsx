@@ -14,6 +14,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { BackButton } from '@/components/common/BackButton';
 import CustomButton from '@/components/common/CustomButton';
 import { Colors } from '@/constants/Colors';
 import { Spacing } from '@/constants/Spacing';
@@ -82,6 +83,7 @@ export default function ScanAttendanceScreen() {
     return (
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.centerContent}>
+          <BackButton onPress={() => router.back()} />
           <Text style={styles.description}>Proverava se dozvola za kameru.</Text>
         </View>
       </SafeAreaView>
@@ -92,6 +94,7 @@ export default function ScanAttendanceScreen() {
     return (
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.centerContent}>
+          <BackButton onPress={() => router.back()} />
           <Text style={styles.title}>Skeniranje QR koda</Text>
           <Text style={styles.description}>
             Dozvolite pristup kameri kako biste mogli da evidentirate prisustvo.
@@ -105,6 +108,7 @@ export default function ScanAttendanceScreen() {
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
+        <BackButton onPress={() => router.back()} />
         <Text style={styles.title}>Skeniraj QR kod</Text>
         <Text style={styles.description}>
           Usmerite kameru ka QR kodu interne aktivnosti.
@@ -177,6 +181,7 @@ const styles = StyleSheet.create({
     fontSize: 22,
     fontWeight: '700',
     color: Colors.textPrimary,
+    marginTop: Spacing.md,
     marginBottom: Spacing.xs,
   },
   description: {

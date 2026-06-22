@@ -1,5 +1,5 @@
-import { Stack, useRouter, useSegments } from 'expo-router';
-import { useEffect } from 'react';
+import { Stack, usePathname, useRouter, useSegments } from 'expo-router';
+import { useEffect, useRef } from 'react';
 import { ActivityIndicator, View } from 'react-native';
 
 import { AuthProvider } from '@/contexts/AuthContext';
@@ -8,7 +8,22 @@ import { useAuth } from '@/hooks/useAuth';
 function RootNavigation() {
   const { firebaseUser, emailVerified, appUser, loading } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
   const segments = useSegments();
+  const lastRedirectRef = useRef<string | null>(null);
+
+  const redirectTo = (targetPath: string) => {
+    if (pathname === targetPath || lastRedirectRef.current === targetPath) {
+      return;
+    }
+
+    lastRedirectRef.current = targetPath;
+    router.replace(targetPath as any);
+  };
+
+  useEffect(() => {
+    lastRedirectRef.current = null;
+  }, [pathname]);
 
   useEffect(() => {
     if (loading) return;
@@ -36,42 +51,34 @@ function RootNavigation() {
       segments[0] === 'qr-code';
     const isEmployeeLikeRole =
       appUser?.role === 'EMPLOYEE' || appUser?.role === 'EXECUTIVE_BOARD';
+    const roleRootPath =
+      appUser?.role === 'ADMIN'
+        ? '/(admin)'
+        : isEmployeeLikeRole
+          ? '/(employee)'
+          : appUser?.role === 'INSTRUCTOR'
+            ? '/(instructor)'
+            : '/(tabs)';
 
     if (!firebaseUser && !inAuthScreen) {
-      router.replace('/login');
+      redirectTo('/login');
       return;
     }
 
     if (firebaseUser && !emailVerified) {
       if (!inVerifyEmailScreen) {
-        router.replace('/verify-email');
+        redirectTo('/verify-email');
       }
       return;
     }
 
     if (firebaseUser && emailVerified && inVerifyEmailScreen && appUser) {
-      if (appUser.role === 'ADMIN') {
-        router.replace('/(admin)' as any);
-      } else if (isEmployeeLikeRole) {
-        router.replace('/(employee)' as any);
-      } else if (appUser.role === 'INSTRUCTOR') {
-        router.replace('/(instructor)' as any);
-      } else {
-        router.replace('/(tabs)' as any);
-      }
+      redirectTo(roleRootPath);
       return;
     }
 
     if (firebaseUser && appUser && inAuthScreen) {
-      if (appUser.role === 'ADMIN') {
-        router.replace('/(admin)' as any);
-      } else if (isEmployeeLikeRole) {
-        router.replace('/(employee)' as any);
-      } else if (appUser.role === 'INSTRUCTOR') {
-        router.replace('/(instructor)' as any);
-      } else {
-        router.replace('/(tabs)' as any);
-      }
+      redirectTo(roleRootPath);
       return;
     }
 
@@ -81,7 +88,7 @@ function RootNavigation() {
         !inAdminGroup &&
         !inUserCompetenciesScreen
       ) {
-        router.replace('/(admin)' as any);
+        redirectTo('/(admin)');
         return;
       }
 
@@ -91,7 +98,7 @@ function RootNavigation() {
         !inUserCompetenciesScreen &&
         !inSharedProtectedScreen
       ) {
-        router.replace('/(employee)' as any);
+        redirectTo('/(employee)');
         return;
       }
 
@@ -100,7 +107,7 @@ function RootNavigation() {
         !inInstructorGroup &&
         !inSharedProtectedScreen
       ) {
-        router.replace('/(instructor)' as any);
+        redirectTo('/(instructor)');
         return;
       }
 
@@ -110,11 +117,11 @@ function RootNavigation() {
         appUser.role !== 'INSTRUCTOR' &&
         (inAdminGroup || inEmployeeGroup || inInstructorGroup)
       ) {
-        router.replace('/(tabs)' as any);
+        redirectTo('/(tabs)');
         return;
       }
     }
-  }, [firebaseUser, emailVerified, appUser, loading, segments, router]);
+  }, [firebaseUser, emailVerified, appUser, loading, segments, pathname, router]);
 
   if (loading) {
     return (

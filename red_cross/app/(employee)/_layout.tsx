@@ -108,6 +108,8 @@ export default function EmployeeTabsLayout() {
         options={{
           href: null,
           title: 'Oprema volontera',
+          headerShown: false,
+          tabBarStyle: { display: 'none' },
         }}
       />
 
@@ -116,6 +118,8 @@ export default function EmployeeTabsLayout() {
         options={{
           href: null,
           title: 'Izdaj opremu',
+          headerShown: false,
+          tabBarStyle: { display: 'none' },
         }}
       />
 
@@ -124,6 +128,8 @@ export default function EmployeeTabsLayout() {
         options={{
           href: null,
           title: 'Vrati opremu',
+          headerShown: false,
+          tabBarStyle: { display: 'none' },
         }}
       />
     </Tabs>

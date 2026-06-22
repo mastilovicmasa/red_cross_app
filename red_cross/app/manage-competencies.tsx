@@ -8,6 +8,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { BackButton } from '@/components/common/BackButton';
 import CustomButton from '@/components/common/CustomButton';
 import { Colors } from '@/constants/Colors';
 import { Spacing } from '@/constants/Spacing';
@@ -78,6 +79,7 @@ export default function ManageCompetenciesScreen() {
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
+        <BackButton onPress={() => router.back()} />
         <Text style={styles.title}>Kompetencije</Text>
 
         <Text style={styles.subtitle}>
@@ -190,6 +192,7 @@ const styles = StyleSheet.create({
     fontSize: 26,
     fontWeight: '700',
     textAlign: 'center',
+    marginTop: Spacing.md,
     marginBottom: Spacing.sm,
   },
   subtitle: {

@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { BackButton } from '@/components/common/BackButton';
 import CustomButton from '@/components/common/CustomButton';
 import CustomInput from '@/components/common/CustomInput';
 import { Colors } from '@/constants/Colors';
@@ -163,6 +164,7 @@ export default function EquipmentStockFormScreen() {
         contentContainerStyle={styles.container}
         showsVerticalScrollIndicator={false}
       >
+        <BackButton onPress={() => router.replace('/(admin)/equipment' as any)} />
         <Text style={styles.title}>Nova lager stavka</Text>
         <Text style={styles.description}>
           Lager stavka predstavlja konkretan tip opreme i veličinu koju će
@@ -284,6 +286,7 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: '700',
     color: Colors.textPrimary,
+    marginTop: Spacing.md,
     marginBottom: Spacing.sm,
   },
   description: {

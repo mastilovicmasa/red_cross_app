@@ -107,6 +107,8 @@ export default function TabsLayout() {
         options={{
           href: null,
           title: 'Novi tip opreme',
+          headerShown: false,
+          tabBarStyle: { display: 'none' },
         }}
       />
 
@@ -115,6 +117,8 @@ export default function TabsLayout() {
         options={{
           href: null,
           title: 'Nova lager stavka',
+          headerShown: false,
+          tabBarStyle: { display: 'none' },
         }}
       />
 
@@ -123,6 +127,8 @@ export default function TabsLayout() {
         options={{
           href: null,
           title: 'Korekcija lagera',
+          headerShown: false,
+          tabBarStyle: { display: 'none' },
         }}
       />
     </Tabs>

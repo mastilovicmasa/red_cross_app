@@ -97,6 +97,8 @@ export default function UserCompetenciesScreen() {
           <BackButton onPress={() => router.back()} />
         </View>
 
+        <Text style={styles.screenTitle}>Kompetencije korisnika</Text>
+
         <View style={styles.userCard}>
           <Text style={styles.userName}>
             {user.firstName} {user.lastName}
@@ -205,6 +207,12 @@ const styles = StyleSheet.create({
     padding: Spacing.lg,
   },
   backButtonContainer: {
+    marginBottom: Spacing.md,
+  },
+  screenTitle: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: Colors.textPrimary,
     marginBottom: Spacing.md,
   },
   userCard: {

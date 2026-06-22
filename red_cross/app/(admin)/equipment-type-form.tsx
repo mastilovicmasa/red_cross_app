@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { BackButton } from '@/components/common/BackButton';
 import CustomButton from '@/components/common/CustomButton';
 import CustomInput from '@/components/common/CustomInput';
 import { Colors } from '@/constants/Colors';
@@ -85,6 +86,7 @@ export default function EquipmentTypeFormScreen() {
         contentContainerStyle={styles.container}
         showsVerticalScrollIndicator={false}
       >
+        <BackButton onPress={() => router.replace('/(admin)/equipment' as any)} />
         <Text style={styles.title}>Novi tip opreme</Text>
         <Text style={styles.description}>
           Tip opreme predstavlja šifarnik, na primer majica sa kragnom, duks ili
@@ -177,6 +179,7 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: '700',
     color: Colors.textPrimary,
+    marginTop: Spacing.md,
     marginBottom: Spacing.sm,
   },
   description: {

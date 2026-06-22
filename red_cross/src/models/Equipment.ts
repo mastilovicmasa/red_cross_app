@@ -21,6 +21,7 @@ export type EquipmentStock = {
 export type EquipmentIssue = {
   id: string;
   issuedAt: string; // ISO string
+  status: 'OPEN' | 'RETURNED';
   closedAt?: string; // ISO string
 
   issuedByUserId: string;

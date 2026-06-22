@@ -76,6 +76,7 @@ export async function issueEquipment({
       const equipmentIssue: EquipmentIssue = {
         id: equipmentIssueRef.id,
         issuedAt,
+        status: 'OPEN',
         issuedByUserId,
         issuedToUserId,
         equipmentStockId,
@@ -107,7 +108,7 @@ export async function returnEquipment(
 
     const equipmentIssue = equipmentIssueSnapshot.data() as EquipmentIssue;
 
-    if (equipmentIssue.closedAt) {
+    if (equipmentIssue.status === 'RETURNED' || equipmentIssue.closedAt) {
       throw new Error('Oprema je vec razduzena.');
     }
 
@@ -125,6 +126,7 @@ export async function returnEquipment(
     const equipmentStock = equipmentStockSnapshot.data() as EquipmentStock;
 
     transaction.update(equipmentIssueRef, {
+      status: 'RETURNED',
       closedAt: new Date().toISOString(),
     });
     transaction.update(equipmentStockRef, {
@@ -147,14 +149,14 @@ export async function getOpenEquipmentIssuesByUser(
   const equipmentIssuesRef = collection(db, 'equipmentIssues');
   const issueQuery = query(
     equipmentIssuesRef,
-    where('issuedToUserId', '==', userId)
+    where('issuedToUserId', '==', userId),
+    where('status', '==', 'OPEN')
   );
   const snapshot = await getDocs(issueQuery);
 
-  return snapshot.docs
-    .map(document => document.data() as EquipmentIssue)
-    .filter(issue => !issue.closedAt)
-    .sort((first, second) => first.issuedAt.localeCompare(second.issuedAt));
+  return sortEquipmentIssuesByIssuedAt(
+    snapshot.docs.map(document => document.data() as EquipmentIssue)
+  );
 }
 
 export async function getEquipmentIssueHistoryByUser(
@@ -167,9 +169,9 @@ export async function getEquipmentIssueHistoryByUser(
   );
   const snapshot = await getDocs(issueQuery);
 
-  return snapshot.docs
-    .map(document => document.data() as EquipmentIssue)
-    .sort((first, second) => first.issuedAt.localeCompare(second.issuedAt));
+  return sortEquipmentIssuesByIssuedAt(
+    snapshot.docs.map(document => document.data() as EquipmentIssue)
+  );
 }
 
 export async function getOpenEquipmentIssuesByStock(
@@ -178,21 +180,28 @@ export async function getOpenEquipmentIssuesByStock(
   const equipmentIssuesRef = collection(db, 'equipmentIssues');
   const issueQuery = query(
     equipmentIssuesRef,
-    where('equipmentStockId', '==', equipmentStockId)
+    where('equipmentStockId', '==', equipmentStockId),
+    where('status', '==', 'OPEN')
   );
   const snapshot = await getDocs(issueQuery);
 
-  return snapshot.docs
-    .map(document => document.data() as EquipmentIssue)
-    .filter(issue => !issue.closedAt)
-    .sort((first, second) => first.issuedAt.localeCompare(second.issuedAt));
+  return sortEquipmentIssuesByIssuedAt(
+    snapshot.docs.map(document => document.data() as EquipmentIssue)
+  );
 }
 
 export async function getAllOpenEquipmentIssues(): Promise<EquipmentIssue[]> {
-  const snapshot = await getDocs(collection(db, 'equipmentIssues'));
+  const snapshot = await getDocs(
+    query(collection(db, 'equipmentIssues'), where('status', '==', 'OPEN'))
+  );
 
-  return snapshot.docs
-    .map(document => document.data() as EquipmentIssue)
-    .filter(issue => !issue.closedAt)
-    .sort((first, second) => first.issuedAt.localeCompare(second.issuedAt));
+  return sortEquipmentIssuesByIssuedAt(
+    snapshot.docs.map(document => document.data() as EquipmentIssue)
+  );
+}
+
+function sortEquipmentIssuesByIssuedAt(issues: EquipmentIssue[]) {
+  return issues.sort((first, second) =>
+    first.issuedAt.localeCompare(second.issuedAt)
+  );
 }

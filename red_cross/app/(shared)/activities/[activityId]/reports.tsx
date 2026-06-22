@@ -24,7 +24,7 @@ import { AppUser } from '@/models/User';
 import { getActivityAssignments } from '@/services/assignmentService';
 import { getAssignmentPhotos } from '@/services/activityReportService';
 import { getActivityById } from '@/services/activityService';
-import { getAllUsers } from '@/services/userService';
+import { getUsersByIds } from '@/services/userService';
 
 type ReportListItem = {
   volunteer: AppUser;
@@ -67,10 +67,10 @@ export default function ActivityReportsScreen() {
         return;
       }
 
-      const [loadedAssignments, loadedUsers] = await Promise.all([
-        getActivityAssignments(activityId),
-        getAllUsers(),
-      ]);
+      const loadedAssignments = await getActivityAssignments(activityId);
+      const loadedUsers = await getUsersByIds(
+        loadedAssignments.map(assignment => assignment.volunteerId)
+      );
       const usersById = new Map(loadedUsers.map(user => [user.id, user]));
       const assignedAssignments = loadedAssignments.filter(
         assignment => assignment.status === 'ASSIGNED'

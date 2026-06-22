@@ -3,24 +3,29 @@ import {
   doc,
   getDoc,
   getDocs,
+  query,
   updateDoc,
   writeBatch,
+  where,
 } from 'firebase/firestore';
 
 import { db } from '@/firebase/firestore';
 import { Activity } from '@/models/Activity';
 import { Invitation } from '@/models/Invitation';
+import { getActivityById } from '@/services/activityService';
+
+export function getInvitationId(activityId: string, volunteerId: string) {
+  return `${activityId}_${volunteerId}`;
+}
 
 export async function getActivityInvitations(
   activityId: string
 ): Promise<Invitation[]> {
-  const invitationsRef = collection(
-    db,
-    'activities',
-    activityId,
-    'invitations'
+  const invitationsQuery = query(
+    collection(db, 'invitations'),
+    where('activityId', '==', activityId)
   );
-  const snapshot = await getDocs(invitationsRef);
+  const snapshot = await getDocs(invitationsQuery);
 
   return snapshot.docs.map(document => document.data() as Invitation);
 }
@@ -37,20 +42,15 @@ export async function createActivityInvitations(
   const sentAt = new Date().toISOString();
 
   volunteerIds.forEach(volunteerId => {
+    const invitationId = getInvitationId(activityId, volunteerId);
     const invitation: Invitation = {
-      id: volunteerId,
+      id: invitationId,
       activityId,
       volunteerId,
       sentAt,
       response: 'PENDING',
     };
-    const invitationRef = doc(
-      db,
-      'activities',
-      activityId,
-      'invitations',
-      volunteerId
-    );
+    const invitationRef = doc(db, 'invitations', invitationId);
 
     batch.set(invitationRef, invitation);
   });
@@ -61,19 +61,27 @@ export async function createActivityInvitations(
 export async function getVolunteerInvitations(
   volunteerId: string
 ): Promise<Array<{ activity: Activity; invitation: Invitation }>> {
-  const activitiesSnapshot = await getDocs(collection(db, 'activities'));
-  const activities = activitiesSnapshot.docs.map(
-    document => document.data() as Activity
+  const invitationsQuery = query(
+    collection(db, 'invitations'),
+    where('volunteerId', '==', volunteerId)
   );
-  const invitations = await Promise.all(
-    activities.map(async activity => {
-      const invitation = await getVolunteerInvitation(activity.id, volunteerId);
+  const invitationsSnapshot = await getDocs(invitationsQuery);
+  const invitations = invitationsSnapshot.docs.map(
+    document => document.data() as Invitation
+  );
+  const items = await Promise.all(
+    invitations.map(async invitation => {
+      const activity = await getActivityById(invitation.activityId);
 
-      return invitation ? { activity, invitation } : null;
+      if (!activity) {
+        return null;
+      }
+
+      return { activity, invitation };
     })
   );
 
-  return invitations
+  return items
     .filter(
       (
         item
@@ -91,13 +99,7 @@ export async function getVolunteerInvitation(
   activityId: string,
   volunteerId: string
 ): Promise<Invitation | null> {
-  const invitationRef = doc(
-    db,
-    'activities',
-    activityId,
-    'invitations',
-    volunteerId
-  );
+  const invitationRef = doc(db, 'invitations', getInvitationId(activityId, volunteerId));
   const snapshot = await getDoc(invitationRef);
 
   if (!snapshot.exists()) {
@@ -113,13 +115,7 @@ export async function respondToInvitation(
   response: 'ACCEPTED' | 'DECLINED',
   responseMessage?: string
 ): Promise<void> {
-  const invitationRef = doc(
-    db,
-    'activities',
-    activityId,
-    'invitations',
-    volunteerId
-  );
+  const invitationRef = doc(db, 'invitations', getInvitationId(activityId, volunteerId));
 
   await updateDoc(invitationRef, {
     response,

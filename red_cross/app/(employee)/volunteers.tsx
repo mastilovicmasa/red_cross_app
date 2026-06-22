@@ -14,7 +14,7 @@ import { UserCard } from '@/components/common/userCard';
 import { Colors } from '@/constants/Colors';
 import { Spacing } from '@/constants/Spacing';
 import { AppUser } from '@/models/User';
-import { getAllUsers } from '@/services/userService';
+import { getUsersByRoles } from '@/services/userService';
 
 export default function EmployeeVolunteersScreen() {
   const [users, setUsers] = useState<AppUser[]>([]);
@@ -25,7 +25,11 @@ export default function EmployeeVolunteersScreen() {
   }, []);
 
   const loadUsers = async () => {
-    const data = await getAllUsers();
+    const data = await getUsersByRoles([
+      'VOLUNTEER',
+      'INSTRUCTOR',
+      'EXECUTIVE_BOARD',
+    ]);
     setUsers(data);
   };
 
@@ -33,15 +37,10 @@ export default function EmployeeVolunteersScreen() {
     const searchValue = search.toLowerCase().trim();
 
     return users.filter(user => {
-      const isVisibleRole =
-        user.role === 'VOLUNTEER' ||
-        user.role === 'INSTRUCTOR' ||
-        user.role === 'EXECUTIVE_BOARD';
-
       const fullName = `${user.firstName} ${user.lastName}`.toLowerCase();
 
       return (
-        isVisibleRole &&
+        user.isActive &&
         (
           fullName.includes(searchValue) ||
           user.phoneNumber?.toLowerCase().includes(searchValue) ||

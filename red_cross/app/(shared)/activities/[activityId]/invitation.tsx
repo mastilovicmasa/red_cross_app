@@ -18,11 +18,9 @@ import CustomButton from '@/components/common/CustomButton';
 import { Colors } from '@/constants/Colors';
 import { Spacing } from '@/constants/Spacing';
 import { useAuth } from '@/hooks/useAuth';
-import { Assignment } from '@/models/Assignment';
 import { Activity } from '@/models/Activity';
 import { Invitation, InvitationResponseStatus } from '@/models/Invitation';
 import { AppUser } from '@/models/User';
-import { getVolunteerAssignment } from '@/services/assignmentService';
 import { getActivityById } from '@/services/activityService';
 import {
   getVolunteerInvitation,
@@ -42,7 +40,6 @@ export default function InvitationDetailsScreen() {
   const [activity, setActivity] = useState<Activity | null>(null);
   const [creator, setCreator] = useState<AppUser | null>(null);
   const [invitation, setInvitation] = useState<Invitation | null>(null);
-  const [assignment, setAssignment] = useState<Assignment | null>(null);
   const [declineMessage, setDeclineMessage] = useState('');
   const [declineModalVisible, setDeclineModalVisible] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -62,10 +59,9 @@ export default function InvitationDetailsScreen() {
 
     try {
       setError('');
-      const [loadedActivity, loadedInvitation, loadedAssignment] = await Promise.all([
+      const [loadedActivity, loadedInvitation] = await Promise.all([
         getActivityById(activityId),
         getVolunteerInvitation(activityId, appUser.id),
-        getVolunteerAssignment(activityId, appUser.id),
       ]);
 
       if (!loadedActivity || !loadedInvitation) {
@@ -78,7 +74,6 @@ export default function InvitationDetailsScreen() {
       setActivity(loadedActivity);
       setCreator(loadedCreator);
       setInvitation(loadedInvitation);
-      setAssignment(loadedAssignment);
       setDeclineMessage(loadedInvitation.responseMessage ?? '');
     } catch (loadError) {
       console.error('Error loading invitation details:', loadError);
@@ -158,8 +153,8 @@ export default function InvitationDetailsScreen() {
     );
   }
 
-  const isAssigned = assignment?.status === 'ASSIGNED';
-  const canRespond = isInvitationActive(activity) && !isAssigned;
+  const canRespond =
+    isInvitationActive(activity) && invitation.response !== 'ACCEPTED';
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -204,17 +199,6 @@ export default function InvitationDetailsScreen() {
             </Text>
           ) : null}
 
-          {isAssigned ? (
-            <View style={styles.assignmentInfo}>
-              <Text style={styles.assignmentInfoTitle}>
-                Potvrdeno vam je ucesce na aktivnosti.
-              </Text>
-              <Text style={styles.assignmentInfoText}>
-                U slucaju sprecenosti kontaktirajte zaposlenog.
-              </Text>
-            </View>
-          ) : null}
-
           {canRespond ? (
             <View style={styles.actions}>
               <Pressable
@@ -253,11 +237,13 @@ export default function InvitationDetailsScreen() {
                 </Text>
               </Pressable>
             </View>
-          ) : !isAssigned ? (
+          ) : (
             <Text style={styles.inactiveText}>
-              Odgovor vise nije moguce promeniti jer aktivnost nije aktivna.
+              {invitation.response === 'ACCEPTED'
+                ? 'Poziv je prihvacen. Dalje informacije pratite kroz Moje aktivnosti.'
+                : 'Odgovor vise nije moguce promeniti jer aktivnost nije aktivna.'}
             </Text>
-          ) : null}
+          )}
         </View>
       </ScrollView>
 
@@ -432,23 +418,6 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     color: Colors.textSecondary,
     marginTop: Spacing.sm,
-  },
-  assignmentInfo: {
-    borderRadius: 8,
-    backgroundColor: '#E7F8EF',
-    padding: Spacing.sm,
-    marginTop: Spacing.md,
-  },
-  assignmentInfoTitle: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#1B7F46',
-  },
-  assignmentInfoText: {
-    fontSize: 13,
-    lineHeight: 18,
-    color: '#1B7F46',
-    marginTop: 2,
   },
   actions: {
     gap: Spacing.sm,

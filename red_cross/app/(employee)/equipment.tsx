@@ -26,7 +26,7 @@ import { AppUser } from '@/models/User';
 import { getAllOpenEquipmentIssues } from '@/services/equipmentIssueService';
 import { getAllEquipmentStocks } from '@/services/equipmentStockService';
 import { getAllEquipmentTypes } from '@/services/equipmentTypeService';
-import { getAllUsers } from '@/services/userService';
+import { getUsersByIds } from '@/services/userService';
 
 type EmployeeEquipmentTab = 'STOCK' | 'VOLUNTEERS';
 
@@ -71,12 +71,14 @@ export default function EmployeeEquipmentScreen() {
   const loadEquipmentData = async () => {
     try {
       setError('');
-      const [types, stocks, issues, allUsers] = await Promise.all([
+      const [types, stocks, issues] = await Promise.all([
         getAllEquipmentTypes(),
         getAllEquipmentStocks(),
         getAllOpenEquipmentIssues(),
-        getAllUsers(),
       ]);
+      const allUsers = await getUsersByIds(
+        issues.map(issue => issue.issuedToUserId)
+      );
 
       setEquipmentTypes(types);
       setEquipmentStocks(stocks);

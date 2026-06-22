@@ -29,7 +29,7 @@ import {
   createActivityInvitations,
   getActivityInvitations,
 } from '@/services/invitationService';
-import { getAllUsers } from '@/services/userService';
+import { getActivityInviteCandidates } from '@/services/userService';
 
 type VolunteerTab = 'SUGGESTED' | 'ALL';
 type GenderFilter = 'ALL' | Gender;
@@ -91,21 +91,19 @@ export default function InviteVolunteersScreen() {
       const [
         loadedRequirements,
         loadedCompetencies,
-        loadedUsers,
+        loadedInviteCandidates,
         loadedInvitations,
       ] = await Promise.all([
         getActivityRequirements(activityId),
         getAllCompetencies(),
-        getAllUsers(),
+        getActivityInviteCandidates(),
         getActivityInvitations(activityId),
       ]);
 
       setActivity(loadedActivity);
       setRequirements(loadedRequirements);
       setCompetencies(loadedCompetencies);
-      setVolunteers(
-        loadedUsers.filter(user => user.role === 'VOLUNTEER' && user.isActive)
-      );
+      setVolunteers(loadedInviteCandidates);
       setInvitations(loadedInvitations);
     } catch (loadError) {
       console.error('Error loading volunteers for invitations:', loadError);

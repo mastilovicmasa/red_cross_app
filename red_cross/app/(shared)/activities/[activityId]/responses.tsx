@@ -27,7 +27,7 @@ import {
 } from '@/services/assignmentService';
 import { getActivityById } from '@/services/activityService';
 import { getActivityInvitations } from '@/services/invitationService';
-import { getAllUsers } from '@/services/userService';
+import { getUsersByIds } from '@/services/userService';
 
 type InvitationListItem = {
   invitation: Invitation;
@@ -73,12 +73,16 @@ export default function ActivityResponsesScreen() {
         return;
       }
 
-      const [loadedInvitations, loadedAssignments, loadedUsers] =
-        await Promise.all([
-          getActivityInvitations(activityId),
-          getActivityAssignments(activityId),
-          getAllUsers(),
-        ]);
+      const [loadedInvitations, loadedAssignments] = await Promise.all([
+        getActivityInvitations(activityId),
+        getActivityAssignments(activityId),
+      ]);
+      const volunteerIds = [
+        ...new Set(
+          loadedInvitations.map(invitation => invitation.volunteerId)
+        ),
+      ];
+      const loadedUsers = await getUsersByIds(volunteerIds);
       const usersById = new Map(loadedUsers.map(user => [user.id, user]));
       const assignmentsByVolunteerId = new Map(
         loadedAssignments.map(assignment => [

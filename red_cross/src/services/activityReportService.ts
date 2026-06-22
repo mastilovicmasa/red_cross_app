@@ -14,19 +14,13 @@ import {
 import { db } from '@/firebase/firestore';
 import { Assignment } from '@/models/Assignment';
 import { Photo } from '@/models/Photo';
+import { getAssignmentId } from '@/services/assignmentService';
 
 export async function getAssignmentPhotos(
   activityId: string,
   volunteerId: string
 ): Promise<Photo[]> {
-  const photosRef = collection(
-    db,
-    'activities',
-    activityId,
-    'assignments',
-    volunteerId,
-    'photos'
-  );
+  const photosRef = collection(db, 'assignments', getAssignmentId(activityId, volunteerId), 'photos');
   const snapshot = await getDocs(photosRef);
 
   return snapshot.docs.map(document => document.data() as Photo);
@@ -43,13 +37,8 @@ export async function saveActivityReport({
   volunteerComment: string;
   newPhotoUris: string[];
 }): Promise<void> {
-  const assignmentRef = doc(
-    db,
-    'activities',
-    activityId,
-    'assignments',
-    volunteerId
-  );
+  const assignmentId = getAssignmentId(activityId, volunteerId);
+  const assignmentRef = doc(db, 'assignments', assignmentId);
   const assignmentSnapshot = await getDoc(assignmentRef);
 
   if (!assignmentSnapshot.exists()) {
@@ -70,21 +59,13 @@ export async function saveActivityReport({
     const photoId = createPhotoId();
     const photo: Photo = {
       id: photoId,
-      assignmentId: volunteerId,
+      assignmentId,
       publicId: uploadedPhoto.publicId,
       url: uploadedPhoto.url,
     };
 
     await setDoc(
-      doc(
-        db,
-        'activities',
-        activityId,
-        'assignments',
-        volunteerId,
-        'photos',
-        photoId
-      ),
+      doc(db, 'assignments', assignmentId, 'photos', photoId),
       photo
     );
   }

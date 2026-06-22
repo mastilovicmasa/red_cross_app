@@ -1,6 +1,7 @@
 import {
   collection,
   doc,
+  documentId,
   getDoc,
   getDocs,
   query,
@@ -10,7 +11,7 @@ import {
 } from 'firebase/firestore';
 
 import { db } from '@/firebase/firestore';
-import { AppUser } from '@/models/User';
+import { AppUser, UserRole } from '@/models/User';
 
 
 export async function getAllUsers(): Promise<AppUser[]> {
@@ -18,6 +19,61 @@ export async function getAllUsers(): Promise<AppUser[]> {
   const snapshot = await getDocs(usersRef);
 
   return snapshot.docs.map(document => document.data() as AppUser);
+}
+
+export async function getUsersByRole(role: UserRole): Promise<AppUser[]> {
+  const usersQuery = query(collection(db, 'users'), where('role', '==', role));
+  const snapshot = await getDocs(usersQuery);
+
+  return snapshot.docs.map(document => document.data() as AppUser);
+}
+
+export async function getUsersByIds(userIds: string[]): Promise<AppUser[]> {
+  if (userIds.length === 0) {
+    return [];
+  }
+
+  const uniqueUserIds = [...new Set(userIds)];
+  const chunks: string[][] = [];
+
+  for (let index = 0; index < uniqueUserIds.length; index += 10) {
+    chunks.push(uniqueUserIds.slice(index, index + 10));
+  }
+
+  const snapshots = await Promise.all(
+    chunks.map(chunk =>
+      getDocs(
+        query(collection(db, 'users'), where(documentId(), 'in', chunk))
+      )
+    )
+  );
+
+  return snapshots.flatMap(snapshot =>
+    snapshot.docs.map(document => document.data() as AppUser)
+  );
+}
+
+export async function getUsersByRoles(roles: UserRole[]): Promise<AppUser[]> {
+  if (roles.length === 0) {
+    return [];
+  }
+
+  const uniqueRoles = [...new Set(roles)];
+  const snapshots = await Promise.all(
+    uniqueRoles.map(role => getUsersByRole(role))
+  );
+
+  return snapshots.flat();
+}
+
+export async function getActivityInviteCandidates(): Promise<AppUser[]> {
+  const users = await getUsersByRoles([
+    'VOLUNTEER',
+    'INSTRUCTOR',
+    'EXECUTIVE_BOARD',
+  ]);
+
+  return users.filter(user => user.isActive);
 }
 
 export async function createUser(user: AppUser): Promise<void> {

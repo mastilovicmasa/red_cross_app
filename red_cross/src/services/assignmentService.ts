@@ -3,24 +3,29 @@ import {
   doc,
   getDoc,
   getDocs,
+  query,
   setDoc,
   updateDoc,
+  where,
 } from 'firebase/firestore';
 
 import { db } from '@/firebase/firestore';
 import { Assignment } from '@/models/Assignment';
 import { Activity } from '@/models/Activity';
+import { getActivityById } from '@/services/activityService';
+
+export function getAssignmentId(activityId: string, volunteerId: string) {
+  return `${activityId}_${volunteerId}`;
+}
 
 export async function getActivityAssignments(
   activityId: string
 ): Promise<Assignment[]> {
-  const assignmentsRef = collection(
-    db,
-    'activities',
-    activityId,
-    'assignments'
+  const assignmentsQuery = query(
+    collection(db, 'assignments'),
+    where('activityId', '==', activityId)
   );
-  const snapshot = await getDocs(assignmentsRef);
+  const snapshot = await getDocs(assignmentsQuery);
 
   return snapshot.docs.map(document => document.data() as Assignment);
 }
@@ -29,13 +34,7 @@ export async function getVolunteerAssignment(
   activityId: string,
   volunteerId: string
 ): Promise<Assignment | null> {
-  const assignmentRef = doc(
-    db,
-    'activities',
-    activityId,
-    'assignments',
-    volunteerId
-  );
+  const assignmentRef = doc(db, 'assignments', getAssignmentId(activityId, volunteerId));
   const snapshot = await getDoc(assignmentRef);
 
   if (!snapshot.exists()) {
@@ -49,20 +48,15 @@ export async function assignVolunteer(
   activityId: string,
   volunteerId: string
 ): Promise<void> {
+  const assignmentId = getAssignmentId(activityId, volunteerId);
   const assignment: Assignment = {
-    id: volunteerId,
+    id: assignmentId,
     activityId,
     volunteerId,
     assignedAt: new Date().toISOString(),
     status: 'ASSIGNED',
   };
-  const assignmentRef = doc(
-    db,
-    'activities',
-    activityId,
-    'assignments',
-    volunteerId
-  );
+  const assignmentRef = doc(db, 'assignments', assignmentId);
 
   await setDoc(assignmentRef, assignment);
 }
@@ -71,13 +65,7 @@ export async function cancelVolunteerAssignment(
   activityId: string,
   volunteerId: string
 ): Promise<void> {
-  const assignmentRef = doc(
-    db,
-    'activities',
-    activityId,
-    'assignments',
-    volunteerId
-  );
+  const assignmentRef = doc(db, 'assignments', getAssignmentId(activityId, volunteerId));
 
   await updateDoc(assignmentRef, { status: 'CANCELLED' });
 }
@@ -85,19 +73,27 @@ export async function cancelVolunteerAssignment(
 export async function getVolunteerAssignments(
   volunteerId: string
 ): Promise<Array<{ activity: Activity; assignment: Assignment }>> {
-  const activitiesSnapshot = await getDocs(collection(db, 'activities'));
-  const activities = activitiesSnapshot.docs.map(
-    document => document.data() as Activity
+  const assignmentsQuery = query(
+    collection(db, 'assignments'),
+    where('volunteerId', '==', volunteerId)
   );
-  const assignments = await Promise.all(
-    activities.map(async activity => {
-      const assignment = await getVolunteerAssignment(activity.id, volunteerId);
+  const assignmentsSnapshot = await getDocs(assignmentsQuery);
+  const assignments = assignmentsSnapshot.docs.map(
+    document => document.data() as Assignment
+  );
+  const items = await Promise.all(
+    assignments.map(async assignment => {
+      const activity = await getActivityById(assignment.activityId);
 
-      return assignment ? { activity, assignment } : null;
+      if (!activity) {
+        return null;
+      }
+
+      return { activity, assignment };
     })
   );
 
-  return assignments
+  return items
     .filter(
       (
         item

@@ -7,10 +7,12 @@ import { HomeActivityCalendar } from '@/components/home/HomeActivityCalendar';
 import { UsefulLinksSection } from '@/components/home/UsefulLinksSection';
 import { Colors } from '@/constants/Colors';
 import { Spacing } from '@/constants/Spacing';
+import { useAuth } from '@/hooks/useAuth';
 import { Activity } from '@/models/Activity';
-import { getAllActivities } from '@/services/activityService';
+import { getNonCancelledActivities } from '@/services/activityService';
 
 export default function EmployeeHomeScreen() {
+  const { appUser } = useAuth();
   const [activities, setActivities] = useState<Activity[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -19,18 +21,22 @@ export default function EmployeeHomeScreen() {
   useFocusEffect(
     useCallback(() => {
       loadActivities();
-    }, [])
+    }, [appUser?.id])
   );
 
-  const visibleActivities = useMemo(
-    () => activities.filter(activity => activity.status !== 'CANCELLED'),
-    [activities]
-  );
+  const visibleActivities = useMemo(() => activities, [activities]);
 
   const loadActivities = async () => {
+    if (!appUser?.id) {
+      setActivities([]);
+      setLoading(false);
+      setRefreshing(false);
+      return;
+    }
+
     try {
       setError('');
-      const loadedActivities = await getAllActivities();
+      const loadedActivities = await getNonCancelledActivities();
       setActivities(loadedActivities);
     } catch (loadError) {
       console.error('Error loading employee home activities:', loadError);

@@ -3,8 +3,10 @@ import {
   doc,
   getDoc,
   getDocs,
+  query,
   setDoc,
   updateDoc,
+  where,
 } from 'firebase/firestore';
 
 import { db } from '@/firebase/firestore';
@@ -64,5 +66,56 @@ export async function getAllActivities(): Promise<Activity[]> {
 
   return snapshot.docs
     .map(document => document.data() as Activity)
+    .sort((a, b) => a.startDateTime.localeCompare(b.startDateTime));
+}
+
+export async function getActivitiesByCreator(
+  userId: string
+): Promise<Activity[]> {
+  const activitiesQuery = query(
+    collection(db, 'activities'),
+    where('createdByUserId', '==', userId)
+  );
+  const snapshot = await getDocs(activitiesQuery);
+
+  return snapshot.docs
+    .map(document => document.data() as Activity)
+    .sort((a, b) => a.startDateTime.localeCompare(b.startDateTime));
+}
+
+export async function getInternalActivitiesByCreator(
+  userId: string
+): Promise<Activity[]> {
+  const activitiesQuery = query(
+    collection(db, 'activities'),
+    where('createdByUserId', '==', userId)
+  );
+  const snapshot = await getDocs(activitiesQuery);
+
+  return snapshot.docs
+    .map(document => document.data() as Activity)
+    .filter(activity => activity.type === 'INTERNAL')
+    .sort((a, b) => a.startDateTime.localeCompare(b.startDateTime));
+}
+
+export async function getActiveInternalActivities(): Promise<Activity[]> {
+  const activitiesQuery = query(
+    collection(db, 'activities'),
+    where('type', '==', 'INTERNAL')
+  );
+  const snapshot = await getDocs(activitiesQuery);
+
+  return snapshot.docs
+    .map(document => document.data() as Activity)
+    .filter(activity => activity.status !== 'CANCELLED')
+    .sort((a, b) => a.startDateTime.localeCompare(b.startDateTime));
+}
+
+export async function getNonCancelledActivities(): Promise<Activity[]> {
+  const snapshot = await getDocs(collection(db, 'activities'));
+
+  return snapshot.docs
+    .map(document => document.data() as Activity)
+    .filter(activity => activity.status !== 'CANCELLED')
     .sort((a, b) => a.startDateTime.localeCompare(b.startDateTime));
 }

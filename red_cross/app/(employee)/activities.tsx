@@ -20,7 +20,7 @@ import { Colors } from '@/constants/Colors';
 import { Spacing } from '@/constants/Spacing';
 import { useAuth } from '@/hooks/useAuth';
 import { Activity } from '@/models/Activity';
-import { getAllActivities } from '@/services/activityService';
+import { getActivitiesByCreator } from '@/services/activityService';
 
 type ActivityTab = 'UPCOMING' | 'PAST' | 'ALL';
 
@@ -55,10 +55,8 @@ export default function EmployeeActivitiesScreen() {
 
     try {
       setError('');
-      const data = await getAllActivities();
-      setActivities(
-        data.filter(activity => activity.createdByUserId === appUser?.id)
-      );
+      const data = await getActivitiesByCreator(appUser.id);
+      setActivities(data);
     } catch (loadError) {
       console.error('Error loading activities:', loadError);
       setError('Došlo je do greške prilikom učitavanja aktivnosti.');

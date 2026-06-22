@@ -20,7 +20,7 @@ import { Colors } from '@/constants/Colors';
 import { Spacing } from '@/constants/Spacing';
 import { useAuth } from '@/hooks/useAuth';
 import { Activity } from '@/models/Activity';
-import { getAllActivities } from '@/services/activityService';
+import { getInternalActivitiesByCreator } from '@/services/activityService';
 
 type ActivityTab = 'UPCOMING' | 'PAST' | 'ALL';
 
@@ -55,14 +55,8 @@ export default function InstructorActivitiesScreen() {
 
     try {
       setError('');
-      const data = await getAllActivities();
-      setActivities(
-        data.filter(
-          activity =>
-            activity.type === 'INTERNAL' &&
-            activity.createdByUserId === appUser?.id
-        )
-      );
+      const data = await getInternalActivitiesByCreator(appUser.id);
+      setActivities(data);
     } catch (loadError) {
       console.error('Error loading instructor activities:', loadError);
       setError('Došlo je do greške prilikom učitavanja aktivnosti.');

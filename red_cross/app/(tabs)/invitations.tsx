@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import { router, useFocusEffect } from 'expo-router';
+import { router, useFocusEffect, useSegments } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { BackButton } from '@/components/common/BackButton';
 import { SegmentedTabs } from '@/components/common/SegmentedTabs';
 import { Colors } from '@/constants/Colors';
 import { Spacing } from '@/constants/Spacing';
@@ -39,6 +40,7 @@ const responseLabels: Record<InvitationResponseStatus, string> = {
 
 export default function InvitationsScreen() {
   const { appUser } = useAuth();
+  const segments = useSegments();
   const [items, setItems] = useState<VolunteerInvitationItem[]>([]);
   const [selectedTab, setSelectedTab] = useState<InvitationTab>('ACTIVE');
   const [loading, setLoading] = useState(true);
@@ -81,6 +83,8 @@ export default function InvitationsScreen() {
       ),
     [items, selectedTab]
   );
+  const showBackButton =
+    segments[0] === '(shared)' && segments[1] === 'engagement';
 
   return (
     <SafeAreaView edges={['top', 'left', 'right']} style={styles.safeArea}>
@@ -100,6 +104,7 @@ export default function InvitationsScreen() {
         }
         ListHeaderComponent={
           <View>
+            {showBackButton ? <BackButton onPress={() => router.back()} /> : null}
             <Text style={styles.title}>Pozivi</Text>
             <Text style={styles.subtitle}>
               Pregledajte pozive za eksterne aktivnosti i odgovorite kada budete
@@ -245,6 +250,7 @@ const styles = StyleSheet.create({
     fontSize: 22,
     fontWeight: '700',
     color: Colors.textPrimary,
+    marginTop: Spacing.sm,
   },
   subtitle: {
     fontSize: 14,

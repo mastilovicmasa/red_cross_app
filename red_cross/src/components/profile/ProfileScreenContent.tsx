@@ -128,6 +128,25 @@ export function ProfileScreenContent({
           </Text>
         </View>
 
+        {appUser.role === 'EMPLOYEE' || appUser.role === 'EXECUTIVE_BOARD' ? (
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Zaduzena oprema</Text>
+
+              <Pressable
+                onPress={() => router.push('/(shared)/profile/my-equipment' as any)}
+                style={styles.iconButton}
+              >
+                <Ionicons name="shirt-outline" size={20} color={Colors.primary} />
+              </Pressable>
+            </View>
+
+            <Text style={styles.sectionDescription}>
+              Pregledajte opremu koja vam je trenutno izdata.
+            </Text>
+          </View>
+        ) : null}
+
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Prisustvo na aktivnosti</Text>

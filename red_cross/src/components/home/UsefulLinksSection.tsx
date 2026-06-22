@@ -23,7 +23,7 @@ const defaultLinks: UsefulLinkItem[] = [
   {
     id: 'website',
     label: 'Sajt',
-    description: 'Zvanični sajt Gradskog odbora Crvenog krsta Novi Sad.',
+    description: 'Zvanični sajt Gradske ogranizacije Crvenog krsta Novi Sad.',
     iconName: 'globe-outline',
     url: 'https://www.gockns.org.rs/',
   },

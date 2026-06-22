@@ -3,6 +3,7 @@ import { useCallback, useMemo, useState } from 'react';
 import { RefreshControl, ScrollView, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { EngagementSection } from '@/components/home/EngagementSection';
 import { HomeActivityCalendar } from '@/components/home/HomeActivityCalendar';
 import { UsefulLinksSection } from '@/components/home/UsefulLinksSection';
 import { Colors } from '@/constants/Colors';
@@ -78,6 +79,8 @@ export default function InstructorHomeScreen() {
               : undefined
           }
         />
+
+        <EngagementSection />
 
         <UsefulLinksSection />
       </ScrollView>

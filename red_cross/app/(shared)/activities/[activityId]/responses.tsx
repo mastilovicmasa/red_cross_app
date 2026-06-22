@@ -327,7 +327,9 @@ function ResponseSection({
                 <Text style={styles.volunteerName}>
                   {formatVolunteerName(item.volunteer)}
                 </Text>
-                <Text style={styles.volunteerMeta}>{item.volunteer.email}</Text>
+                <Text style={styles.volunteerMeta}>
+                  {item.volunteer.phoneNumber || 'Telefon nije unet'}
+                </Text>
                 {item.invitation.response === 'DECLINED' &&
                 item.invitation.responseMessage ? (
                   <Text style={styles.responseMessage}>

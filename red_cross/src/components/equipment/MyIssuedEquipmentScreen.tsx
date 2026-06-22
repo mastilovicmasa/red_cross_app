@@ -13,7 +13,11 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors } from '@/constants/Colors';
 import { Spacing } from '@/constants/Spacing';
 import { useAuth } from '@/hooks/useAuth';
-import { EquipmentIssue, EquipmentStock, EquipmentType } from '@/models/Equipment';
+import {
+  EquipmentIssue,
+  EquipmentStock,
+  EquipmentType,
+} from '@/models/Equipment';
 import { getOpenEquipmentIssuesByUser } from '@/services/equipmentIssueService';
 import { getAllEquipmentStocks } from '@/services/equipmentStockService';
 import { getAllEquipmentTypes } from '@/services/equipmentTypeService';
@@ -24,7 +28,13 @@ type MyEquipmentItem = {
   type: EquipmentType | null;
 };
 
-export function MyIssuedEquipmentScreen() {
+type MyIssuedEquipmentScreenProps = {
+  showHeader?: boolean;
+};
+
+export function MyIssuedEquipmentScreen({
+  showHeader = true,
+}: MyIssuedEquipmentScreenProps) {
   const { appUser } = useAuth();
   const [issues, setIssues] = useState<EquipmentIssue[]>([]);
   const [stocks, setStocks] = useState<EquipmentStock[]>([]);
@@ -117,10 +127,14 @@ export function MyIssuedEquipmentScreen() {
         }
         ListHeaderComponent={
           <View>
-            <Text style={styles.title}>Zadužena oprema</Text>
-            <Text style={styles.subtitle}>
-              Molimo vas da opremu vratite čistu i u što kraćem roku.
-            </Text>
+            {showHeader ? (
+              <>
+                <Text style={styles.title}>Zaduzena oprema</Text>
+                <Text style={styles.subtitle}>
+                  Molimo vas da opremu vratite cistu i u sto kracem roku.
+                </Text>
+              </>
+            ) : null}
 
             {error ? <Text style={styles.errorText}>{error}</Text> : null}
           </View>

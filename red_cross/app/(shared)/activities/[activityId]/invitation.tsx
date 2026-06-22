@@ -51,7 +51,11 @@ export default function InvitationDetailsScreen() {
   }, [activityId, appUser?.id]);
 
   const loadData = async () => {
-    if (!activityId || !appUser?.id || appUser.role !== 'VOLUNTEER') {
+    if (
+      !activityId ||
+      !appUser?.id ||
+      !['VOLUNTEER', 'INSTRUCTOR', 'EXECUTIVE_BOARD'].includes(appUser.role)
+    ) {
       setError('Poziv nije pronadjen.');
       setLoading(false);
       return;

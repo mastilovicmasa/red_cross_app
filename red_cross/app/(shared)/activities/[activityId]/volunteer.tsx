@@ -62,7 +62,11 @@ export default function VolunteerActivityDetailsScreen() {
   }, [activityId, appUser?.id]);
 
   const loadData = async () => {
-    if (!activityId || !appUser?.id || appUser.role !== 'VOLUNTEER') {
+    if (
+      !activityId ||
+      !appUser?.id ||
+      !['VOLUNTEER', 'INSTRUCTOR', 'EXECUTIVE_BOARD'].includes(appUser.role)
+    ) {
       setError('Aktivnost nije pronadjena.');
       setLoading(false);
       return;

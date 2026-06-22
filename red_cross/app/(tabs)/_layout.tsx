@@ -75,7 +75,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="activities"
         options={{
-          title: 'Aktivnosti',
+          title: 'Dodeljene',
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="calendar-outline" size={size} color={color} />
           ),

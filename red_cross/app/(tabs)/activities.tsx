@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import { router, useFocusEffect } from 'expo-router';
+import { router, useFocusEffect, useSegments } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { BackButton } from '@/components/common/BackButton';
 import { SegmentedTabs } from '@/components/common/SegmentedTabs';
 import { Colors } from '@/constants/Colors';
 import { Spacing } from '@/constants/Spacing';
@@ -39,6 +40,7 @@ const assignmentStatusLabels: Record<AssignmentStatus, string> = {
 
 export default function ActivitiesScreen() {
   const { appUser } = useAuth();
+  const segments = useSegments();
   const [items, setItems] = useState<VolunteerAssignmentItem[]>([]);
   const [selectedTab, setSelectedTab] = useState<ActivityTab>('UPCOMING');
   const [loading, setLoading] = useState(true);
@@ -81,6 +83,8 @@ export default function ActivitiesScreen() {
       ),
     [items, selectedTab]
   );
+  const showBackButton =
+    segments[0] === '(shared)' && segments[1] === 'engagement';
 
   return (
     <SafeAreaView edges={['top', 'left', 'right']} style={styles.safeArea}>
@@ -100,7 +104,8 @@ export default function ActivitiesScreen() {
         }
         ListHeaderComponent={
           <View>
-            <Text style={styles.title}>Moje aktivnosti</Text>
+            {showBackButton ? <BackButton onPress={() => router.back()} /> : null}
+            <Text style={styles.title}>Dodeljene aktivnosti</Text>
             <Text style={styles.subtitle}>
               Ovde se nalaze aktivnosti za koje vam je potvrđeno učešće.
             </Text>
@@ -230,6 +235,7 @@ const styles = StyleSheet.create({
     fontSize: 22,
     fontWeight: '700',
     color: Colors.textPrimary,
+    marginTop: Spacing.sm,
   },
   subtitle: {
     fontSize: 14,

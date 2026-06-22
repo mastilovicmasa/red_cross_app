@@ -94,7 +94,7 @@ export default function AdminUsersScreen() {
 
   const handleEditCompetencies = (user: AppUser) => {
     router.push({
-      pathname: '/user-competencies/[userId]' as any,
+      pathname: '/(shared)/users/[userId]/competencies' as any,
       params: { userId: user.id },
     });
   };

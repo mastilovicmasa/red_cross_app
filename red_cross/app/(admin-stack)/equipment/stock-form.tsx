@@ -181,7 +181,7 @@ export default function EquipmentStockFormScreen() {
             </Text>
             <CustomButton
               title="Dodaj tip opreme"
-              onPress={() => router.push('/(admin)/equipment-type-form' as any)}
+              onPress={() => router.push('/(admin-stack)/equipment/type-form' as any)}
             />
           </View>
         ) : (

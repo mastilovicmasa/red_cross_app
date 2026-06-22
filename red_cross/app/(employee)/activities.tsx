@@ -74,7 +74,7 @@ export default function EmployeeActivitiesScreen() {
   };
 
   const handleAddActivity = () => {
-    router.push('/create-activity' as any);
+    router.push('/(shared)/activities/create' as any);
   };
 
   const filteredActivities = useMemo(() => {
@@ -147,7 +147,7 @@ export default function EmployeeActivitiesScreen() {
             activity={item}
             onPress={() =>
               router.push({
-                pathname: '/activity/[activityId]' as any,
+                pathname: '/(shared)/activities/[activityId]' as any,
                 params: { activityId: item.id },
               })
             }

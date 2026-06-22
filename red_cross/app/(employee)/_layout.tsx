@@ -102,36 +102,6 @@ export default function EmployeeTabsLayout() {
           ),
         }}
       />
-
-      <Tabs.Screen
-        name="equipment-volunteer/[userId]"
-        options={{
-          href: null,
-          title: 'Oprema volontera',
-          headerShown: false,
-          tabBarStyle: { display: 'none' },
-        }}
-      />
-
-      <Tabs.Screen
-        name="issue-equipment"
-        options={{
-          href: null,
-          title: 'Izdaj opremu',
-          headerShown: false,
-          tabBarStyle: { display: 'none' },
-        }}
-      />
-
-      <Tabs.Screen
-        name="return-equipment"
-        options={{
-          href: null,
-          title: 'Vrati opremu',
-          headerShown: false,
-          tabBarStyle: { display: 'none' },
-        }}
-      />
     </Tabs>
   );
 }

@@ -195,7 +195,7 @@ export default function ActivityDetailsScreen() {
               ]}
               onPress={() =>
                 router.replace({
-                  pathname: '/edit-activity/[activityId]' as any,
+                  pathname: '/(shared)/activities/[activityId]/edit' as any,
                   params: { activityId: activity.id },
                 })
               }
@@ -215,7 +215,7 @@ export default function ActivityDetailsScreen() {
             ]}
             onPress={() =>
               router.push({
-                pathname: '/invite-volunteers/[activityId]' as any,
+                pathname: '/(shared)/activities/[activityId]/invite-volunteers' as any,
                 params: { activityId: activity.id },
               })
             }
@@ -235,7 +235,7 @@ export default function ActivityDetailsScreen() {
             ]}
             onPress={() =>
               router.push({
-                pathname: '/activity-responses/[activityId]' as any,
+                pathname: '/(shared)/activities/[activityId]/responses' as any,
                 params: { activityId: activity.id },
               })
             }
@@ -255,7 +255,7 @@ export default function ActivityDetailsScreen() {
             ]}
             onPress={() =>
               router.push({
-                pathname: '/activity-reports/[activityId]' as any,
+                pathname: '/(shared)/activities/[activityId]/reports' as any,
                 params: { activityId: activity.id },
               })
             }

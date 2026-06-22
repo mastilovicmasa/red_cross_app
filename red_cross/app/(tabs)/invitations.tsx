@@ -126,7 +126,7 @@ export default function InvitationsScreen() {
             ]}
             onPress={() =>
               router.push({
-                pathname: '/invitation/[activityId]' as any,
+                pathname: '/(shared)/activities/[activityId]/invitation' as any,
                 params: { activityId: item.activity.id },
               })
             }

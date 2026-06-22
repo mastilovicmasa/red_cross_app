@@ -64,7 +64,7 @@ export default function EditActivityScreen() {
     }
 
     router.replace({
-      pathname: '/activity/[activityId]' as any,
+      pathname: '/(shared)/activities/[activityId]' as any,
       params: { activityId },
     });
   };
@@ -148,7 +148,7 @@ export default function EditActivityScreen() {
           : {}),
       });
       router.replace({
-        pathname: '/activity/[activityId]' as any,
+        pathname: '/(shared)/activities/[activityId]' as any,
         params: { activityId: activity.id },
       });
     } catch (saveError) {

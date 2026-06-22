@@ -71,7 +71,7 @@ export default function InstructorHomeScreen() {
             activity.createdByUserId === appUser?.id
               ? () =>
                   router.push({
-                    pathname: '/activity/[activityId]' as any,
+                    pathname: '/(shared)/activities/[activityId]' as any,
                     params: { activityId: activity.id },
                   })
               : undefined

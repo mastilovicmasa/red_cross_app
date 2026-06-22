@@ -64,7 +64,7 @@ export default function EmployeeHomeScreen() {
           emptyDayMessage="Za izabrani dan nema aktivnosti."
           getActivityPressHandler={activity => () =>
             router.push({
-              pathname: '/activity/[activityId]' as any,
+              pathname: '/(shared)/activities/[activityId]' as any,
               params: { activityId: activity.id },
             })
           }

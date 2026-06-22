@@ -64,7 +64,7 @@ export function ProfileScreenContent({
             <Text style={styles.sectionTitle}>Osnovni podaci</Text>
 
             <Pressable
-              onPress={() => router.push('/edit-profile')}
+              onPress={() => router.push('/(shared)/profile/edit' as any)}
               style={styles.iconButton}
             >
               <Ionicons name="create-outline" size={20} color={Colors.primary} />
@@ -87,7 +87,7 @@ export function ProfileScreenContent({
               <Text style={styles.sectionTitle}>Kompetencije</Text>
 
               <Pressable
-                onPress={() => router.push('/manage-competencies')}
+                onPress={() => router.push('/(shared)/profile/competencies' as any)}
                 style={styles.iconButton}
               >
                 <Ionicons name="create-outline" size={20} color={Colors.primary} />
@@ -116,7 +116,7 @@ export function ProfileScreenContent({
             <Text style={styles.sectionTitle}>QR identifikacija</Text>
 
             <Pressable
-              onPress={() => router.push('/qr-code')}
+              onPress={() => router.push('/(shared)/profile/qr-code' as any)}
               style={styles.iconButton}
             >
               <Ionicons name="qr-code-outline" size={20} color={Colors.primary} />
@@ -133,7 +133,7 @@ export function ProfileScreenContent({
             <Text style={styles.sectionTitle}>Prisustvo na aktivnosti</Text>
 
             <Pressable
-              onPress={() => router.push('/scan-attendance')}
+              onPress={() => router.push('/(shared)/activities/scan-attendance' as any)}
               style={styles.iconButton}
             >
               <Ionicons name="scan-outline" size={20} color={Colors.primary} />

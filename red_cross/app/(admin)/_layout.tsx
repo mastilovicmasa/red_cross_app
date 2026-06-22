@@ -101,36 +101,6 @@ export default function TabsLayout() {
           ),
         }}
       />
-
-      <Tabs.Screen
-        name="equipment-type-form"
-        options={{
-          href: null,
-          title: 'Novi tip opreme',
-          headerShown: false,
-          tabBarStyle: { display: 'none' },
-        }}
-      />
-
-      <Tabs.Screen
-        name="equipment-stock-form"
-        options={{
-          href: null,
-          title: 'Nova lager stavka',
-          headerShown: false,
-          tabBarStyle: { display: 'none' },
-        }}
-      />
-
-      <Tabs.Screen
-        name="equipment-stock-adjust/[stockId]"
-        options={{
-          href: null,
-          title: 'Korekcija lagera',
-          headerShown: false,
-          tabBarStyle: { display: 'none' },
-        }}
-      />
     </Tabs>
   );
 }

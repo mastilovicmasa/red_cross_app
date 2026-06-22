@@ -44,7 +44,7 @@ export default function ReturnEquipmentScreen() {
       }
 
       router.replace({
-        pathname: '/(employee)/equipment-volunteer/[userId]' as any,
+        pathname: '/(employee-stack)/equipment/volunteer/[userId]' as any,
         params: { userId: user.id },
       });
     } catch (error) {

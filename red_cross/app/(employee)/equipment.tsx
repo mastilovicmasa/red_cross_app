@@ -233,14 +233,14 @@ export default function EmployeeEquipmentScreen() {
             <View style={styles.headerButtonsRow}>
               <Pressable
                 style={styles.secondaryHeaderButton}
-                onPress={() => router.push('/(employee)/return-equipment' as any)}
+                onPress={() => router.push('/(employee-stack)/equipment/return' as any)}
               >
                 <Ionicons name="refresh-outline" size={18} color={Colors.primary} />
                 <Text style={styles.secondaryHeaderButtonText}>Vrati opremu</Text>
               </Pressable>
               <Pressable
                 style={styles.issueButton}
-                onPress={() => router.push('/(employee)/issue-equipment' as any)}
+                onPress={() => router.push('/(employee-stack)/equipment/issue' as any)}
               >
                 <Ionicons name="add-circle-outline" size={18} color="#FFF" />
                 <Text style={styles.issueButtonText}>Izdaj opremu</Text>
@@ -304,7 +304,7 @@ export default function EmployeeEquipmentScreen() {
               latestIssuedAt={item.latestIssuedAt}
               onPress={() =>
                 router.push({
-                  pathname: '/(employee)/equipment-volunteer/[userId]' as any,
+                  pathname: '/(employee-stack)/equipment/volunteer/[userId]' as any,
                   params: { userId: item.user.id },
                 })
               }

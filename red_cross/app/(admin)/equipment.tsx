@@ -143,7 +143,7 @@ export default function AdminEquipmentScreen() {
                 <Text style={styles.sectionTitle}>Tipovi opreme</Text>
                 <Pressable
                   style={styles.sectionActionButton}
-                  onPress={() => router.push('/(admin)/equipment-type-form' as any)}
+                  onPress={() => router.push('/(admin-stack)/equipment/type-form' as any)}
                 >
                   <Ionicons
                     name="add-circle-outline"
@@ -185,7 +185,7 @@ export default function AdminEquipmentScreen() {
               <Text style={styles.sectionTitle}>Lager stavke</Text>
               <Pressable
                 style={styles.sectionActionButton}
-                onPress={() => router.push('/(admin)/equipment-stock-form' as any)}
+                onPress={() => router.push('/(admin-stack)/equipment/stock-form' as any)}
               >
                 <Ionicons
                   name="add-circle-outline"
@@ -224,7 +224,7 @@ export default function AdminEquipmentScreen() {
               equipmentType={item.equipmentType}
               onAdjust={() =>
                 router.push({
-                  pathname: '/(admin)/equipment-stock-adjust/[stockId]' as any,
+                  pathname: '/(admin-stack)/equipment/stock-adjust/[stockId]' as any,
                   params: { stockId: item.equipmentStock.id },
                 })
               }

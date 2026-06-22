@@ -33,22 +33,11 @@ function RootNavigation() {
     const inVerifyEmailScreen = segments[0] === 'verify-email';
 
     const inAdminGroup = segments[0] === '(admin)';
-    const inUserCompetenciesScreen = segments[0] === 'user-competencies';
+    const inAdminStackGroup = segments[0] === '(admin-stack)';
     const inEmployeeGroup = segments[0] === '(employee)';
+    const inEmployeeStackGroup = segments[0] === '(employee-stack)';
     const inInstructorGroup = segments[0] === '(instructor)';
-    const inSharedProtectedScreen =
-      segments[0] === 'create-activity' ||
-      segments[0] === 'edit-activity' ||
-      segments[0] === 'invite-volunteers' ||
-      segments[0] === 'activity-responses' ||
-      segments[0] === 'activity-reports' ||
-      segments[0] === 'invitation' ||
-      segments[0] === 'volunteer-activity' ||
-      segments[0] === 'activity' ||
-      segments[0] === 'scan-attendance' ||
-      segments[0] === 'edit-profile' ||
-      segments[0] === 'manage-competencies' ||
-      segments[0] === 'qr-code';
+    const inSharedGroup = segments[0] === '(shared)';
     const isEmployeeLikeRole =
       appUser?.role === 'EMPLOYEE' || appUser?.role === 'EXECUTIVE_BOARD';
     const roleRootPath =
@@ -86,7 +75,8 @@ function RootNavigation() {
       if (
         appUser.role === 'ADMIN' &&
         !inAdminGroup &&
-        !inUserCompetenciesScreen
+        !inAdminStackGroup &&
+        !inSharedGroup
       ) {
         redirectTo('/(admin)');
         return;
@@ -95,8 +85,8 @@ function RootNavigation() {
       if (
         isEmployeeLikeRole &&
         !inEmployeeGroup &&
-        !inUserCompetenciesScreen &&
-        !inSharedProtectedScreen
+        !inEmployeeStackGroup &&
+        !inSharedGroup
       ) {
         redirectTo('/(employee)');
         return;
@@ -105,7 +95,7 @@ function RootNavigation() {
       if (
         appUser.role === 'INSTRUCTOR' &&
         !inInstructorGroup &&
-        !inSharedProtectedScreen
+        !inSharedGroup
       ) {
         redirectTo('/(instructor)');
         return;
@@ -115,7 +105,13 @@ function RootNavigation() {
         appUser.role !== 'ADMIN' &&
         !isEmployeeLikeRole &&
         appUser.role !== 'INSTRUCTOR' &&
-        (inAdminGroup || inEmployeeGroup || inInstructorGroup)
+        (
+          inAdminGroup ||
+          inAdminStackGroup ||
+          inEmployeeGroup ||
+          inEmployeeStackGroup ||
+          inInstructorGroup
+        )
       ) {
         redirectTo('/(tabs)');
         return;

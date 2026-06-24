@@ -28,11 +28,11 @@ import { getAllEquipmentStocks } from '@/services/equipmentStockService';
 import { getAllEquipmentTypes } from '@/services/equipmentTypeService';
 import { getUsersByIds } from '@/services/userService';
 
-type EmployeeEquipmentTab = 'STOCK' | 'VOLUNTEERS';
+type EmployeeEquipmentTab = 'STOCK' | 'USERS';
 
 const tabLabels: Record<EmployeeEquipmentTab, string> = {
   STOCK: 'Lager',
-  VOLUNTEERS: 'Po volonteru',
+  USERS: 'Po korisniku',
 };
 
 type StockCardItem = {
@@ -146,7 +146,7 @@ export default function EmployeeEquipmentScreen() {
     [equipmentStocks, equipmentTypeMap, selectedEquipmentTypeId]
   );
 
-  const volunteersWithIssues = useMemo(() => {
+  const usersWithIssues = useMemo(() => {
     const grouped = new Map<
       string,
       {
@@ -193,11 +193,11 @@ export default function EmployeeEquipmentScreen() {
     () =>
       selectedTab === 'STOCK'
         ? stockCards
-        : volunteersWithIssues.map(item => ({
+        : usersWithIssues.map(item => ({
             kind: 'volunteer' as const,
             ...item,
           })),
-    [selectedTab, stockCards, volunteersWithIssues]
+    [selectedTab, stockCards, usersWithIssues]
   );
 
   return (
@@ -324,7 +324,7 @@ export default function EmployeeEquipmentScreen() {
             </Text>
           ) : (
             <Text style={styles.emptyText}>
-              Trenutno nema volontera sa izdatom opremom.
+              Trenutno nema korisnika sa izdatom opremom.
             </Text>
           )
         }
@@ -390,13 +390,16 @@ function VolunteerEquipmentCard({
             {user.firstName} {user.lastName}
           </Text>
           <Text style={styles.volunteerSecondaryText}>
-            {user.phoneNumber || user.email}
+            {formatRole(user.role)}
           </Text>
         </View>
         <Ionicons name="chevron-forward-outline" size={20} color={Colors.textSecondary} />
       </View>
 
       <View style={styles.volunteerMetaRow}>
+        <Text style={styles.volunteerMetaText}>
+          Kontakt: {user.phoneNumber || user.email}
+        </Text>
         <Text style={styles.volunteerMetaText}>Zaduzeno komada: {issueCount}</Text>
         <Text style={styles.volunteerMetaText}>
           Poslednje izdavanje: {formatDate(latestIssuedAt)}
@@ -425,6 +428,23 @@ function formatCategory(category: EquipmentCategory) {
       return 'Ostalo';
     default:
       return category;
+  }
+}
+
+function formatRole(role: AppUser['role']) {
+  switch (role) {
+    case 'ADMIN':
+      return 'Administrator';
+    case 'EMPLOYEE':
+      return 'Zaposleni';
+    case 'EXECUTIVE_BOARD':
+      return 'Izvrsni odbor';
+    case 'INSTRUCTOR':
+      return 'Instruktor';
+    case 'VOLUNTEER':
+      return 'Volonter';
+    default:
+      return role;
   }
 }
 

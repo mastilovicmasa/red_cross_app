@@ -33,7 +33,7 @@ import {
 import { getAllEquipmentTypes } from '@/services/equipmentTypeService';
 import { getUserByQrToken } from '@/services/userService';
 
-type ScannerMode = 'VOLUNTEER' | 'STOCK' | null;
+type ScannerMode = 'USER' | 'STOCK' | null;
 
 type DraftIssueLine = {
   equipmentStockId: string;
@@ -49,7 +49,7 @@ export default function IssueEquipmentScreen() {
   const [permission, requestPermission] = useCameraPermissions();
   const [equipmentTypes, setEquipmentTypes] = useState<EquipmentType[]>([]);
   const [equipmentStocks, setEquipmentStocks] = useState<EquipmentStock[]>([]);
-  const [selectedVolunteer, setSelectedVolunteer] = useState<AppUser | null>(null);
+  const [selectedUser, setSelectedUser] = useState<AppUser | null>(null);
   const [draftLines, setDraftLines] = useState<DraftIssueLine[]>([]);
   const [scannerMode, setScannerMode] = useState<ScannerMode>(null);
   const [scannerLocked, setScannerLocked] = useState(false);
@@ -130,7 +130,7 @@ export default function IssueEquipmentScreen() {
     setScannerLocked(true);
 
     try {
-      if (scannerMode === 'VOLUNTEER') {
+      if (scannerMode === 'USER') {
         const user = await getUserByQrToken(result.data);
 
         if (!user || !canReceiveEquipment(user.role)) {
@@ -142,7 +142,7 @@ export default function IssueEquipmentScreen() {
           return;
         }
 
-        setSelectedVolunteer(user);
+        setSelectedUser(user);
         setScannerMode(null);
         setScannerLocked(false);
         return;
@@ -298,8 +298,8 @@ export default function IssueEquipmentScreen() {
       return;
     }
 
-    if (!selectedVolunteer) {
-      Alert.alert('Greska', 'Najpre skenirajte QR kod volontera.');
+    if (!selectedUser) {
+      Alert.alert('Greska', 'Najpre skenirajte QR kod korisnika.');
       return;
     }
 
@@ -314,7 +314,7 @@ export default function IssueEquipmentScreen() {
       for (const draftLine of draftLines) {
         await issueEquipment({
           issuedByUserId: appUser.id,
-          issuedToUserId: selectedVolunteer.id,
+          issuedToUserId: selectedUser.id,
           equipmentStockId: draftLine.equipmentStockId,
           quantity: draftLine.quantity,
         });
@@ -324,7 +324,7 @@ export default function IssueEquipmentScreen() {
         {
           text: 'OK',
           onPress: () => {
-            setSelectedVolunteer(null);
+            setSelectedUser(null);
             setDraftLines([]);
             setManualEquipmentStockId('');
             setManualQuantity('1');
@@ -373,13 +373,13 @@ export default function IssueEquipmentScreen() {
           ) : (
             <View style={styles.scannerContainer}>
               <Text style={styles.title}>
-                {scannerMode === 'VOLUNTEER'
-                  ? 'Skeniraj QR kod volontera'
+                {scannerMode === 'USER'
+                  ? 'Skeniraj QR kod korisnika'
                   : 'Skeniraj QR kod opreme'}
               </Text>
               <Text style={styles.description}>
-                {scannerMode === 'VOLUNTEER'
-                  ? 'Usmerite kameru ka QR kodu volontera kako biste otvorili revers.'
+                {scannerMode === 'USER'
+                  ? 'Usmerite kameru ka QR kodu korisnika kako biste otvorili revers.'
                   : 'Usmerite kameru ka QR kodu lager stavke koju zelite da dodate.'}
               </Text>
 
@@ -549,7 +549,7 @@ export default function IssueEquipmentScreen() {
         <BackButton onPress={() => router.replace('/(employee)/equipment' as any)} />
         <Text style={styles.title}>Izdaj opremu</Text>
         <Text style={styles.description}>
-          Skenirajte QR kod volontera, zatim dodajte jednu ili vise stavki na
+          Skenirajte QR kod korisnika, zatim dodajte jednu ili vise stavki na
           revers skeniranjem opreme ili rucnim izborom.
         </Text>
 
@@ -561,28 +561,28 @@ export default function IssueEquipmentScreen() {
           <>
             <View style={styles.section}>
               <View style={styles.sectionHeader}>
-                <Text style={styles.sectionTitle}>Volonter</Text>
+                <Text style={styles.sectionTitle}>Korisnik</Text>
                 <Pressable
                   style={styles.inlineAction}
-                  onPress={() => handleOpenScanner('VOLUNTEER')}
+                  onPress={() => handleOpenScanner('USER')}
                 >
                   <Ionicons name="scan-outline" size={16} color={Colors.primary} />
                   <Text style={styles.inlineActionText}>Skeniraj</Text>
                 </Pressable>
               </View>
 
-              {selectedVolunteer ? (
+              {selectedUser ? (
                 <View style={styles.volunteerCard}>
                   <Text style={styles.volunteerName}>
-                    {selectedVolunteer.firstName} {selectedVolunteer.lastName}
+                    {selectedUser.firstName} {selectedUser.lastName}
                   </Text>
                   <Text style={styles.volunteerSecondaryText}>
-                    {selectedVolunteer.email}
+                    {formatRole(selectedUser.role)}
                   </Text>
                 </View>
               ) : (
                 <Text style={styles.emptyHelperText}>
-                  Jos nije izabran volonter za revers.
+                  Jos nije izabran korisnik za revers.
                 </Text>
               )}
             </View>
@@ -707,7 +707,7 @@ export default function IssueEquipmentScreen() {
                 title="Potvrdi izdavanje"
                 onPress={handleConfirmIssue}
                 loading={submitting}
-                disabled={!selectedVolunteer || draftLines.length === 0}
+                disabled={!selectedUser || draftLines.length === 0}
               />
               <CustomButton
                 title="Nazad"
@@ -723,6 +723,23 @@ export default function IssueEquipmentScreen() {
 
 function canReceiveEquipment(role: UserRole) {
   return role !== 'ADMIN';
+}
+
+function formatRole(role: UserRole) {
+  switch (role) {
+    case 'ADMIN':
+      return 'Administrator';
+    case 'EMPLOYEE':
+      return 'Zaposleni';
+    case 'EXECUTIVE_BOARD':
+      return 'Izvrsni odbor';
+    case 'INSTRUCTOR':
+      return 'Instruktor';
+    case 'VOLUNTEER':
+      return 'Volonter';
+    default:
+      return role;
+  }
 }
 
 function formatCategory(category: EquipmentCategory) {

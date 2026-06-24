@@ -48,7 +48,7 @@ export default function ReturnEquipmentScreen() {
         params: { userId: user.id },
       });
     } catch (error) {
-      console.error('Error scanning volunteer QR for return:', error);
+      console.error('Error scanning user QR for return:', error);
       showResultMessage(
         'Greska',
         'Doslo je do greske prilikom obrade QR koda.',
@@ -75,7 +75,7 @@ export default function ReturnEquipmentScreen() {
           <BackButton onPress={() => router.replace('/(employee)/equipment' as any)} />
           <Text style={styles.title}>Vrati opremu</Text>
           <Text style={styles.description}>
-            Dozvolite pristup kameri kako biste mogli da skenirate QR kod volontera.
+            Dozvolite pristup kameri kako biste mogli da skenirate QR kod korisnika.
           </Text>
           <CustomButton title="Dozvoli kameru" onPress={requestPermission} />
         </View>
@@ -87,7 +87,7 @@ export default function ReturnEquipmentScreen() {
     <SafeAreaView edges={['top', 'left', 'right']} style={styles.safeArea}>
       <View style={styles.container}>
         <BackButton onPress={() => router.replace('/(employee)/equipment' as any)} />
-        <Text style={styles.title}>Skeniraj QR kod volontera</Text>
+        <Text style={styles.title}>Skeniraj QR kod korisnika</Text>
         <Text style={styles.description}>
           Nakon skeniranja otvorice se lista zaduzenja kako biste izabrali sta se
           vraca.

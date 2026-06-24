@@ -13,19 +13,28 @@ import {
 import { db } from '@/firebase/firestore';
 import { AppUser, UserRole } from '@/models/User';
 
+function mapUserDocument(document: {
+  id: string;
+  data: () => Omit<AppUser, 'id'> & Partial<Pick<AppUser, 'id'>>;
+}): AppUser {
+  return {
+    ...document.data(),
+    id: document.id,
+  } as AppUser;
+}
 
 export async function getAllUsers(): Promise<AppUser[]> {
   const usersRef = collection(db, 'users');
   const snapshot = await getDocs(usersRef);
 
-  return snapshot.docs.map(document => document.data() as AppUser);
+  return snapshot.docs.map(mapUserDocument);
 }
 
 export async function getUsersByRole(role: UserRole): Promise<AppUser[]> {
   const usersQuery = query(collection(db, 'users'), where('role', '==', role));
   const snapshot = await getDocs(usersQuery);
 
-  return snapshot.docs.map(document => document.data() as AppUser);
+  return snapshot.docs.map(mapUserDocument);
 }
 
 export async function getUsersByIds(userIds: string[]): Promise<AppUser[]> {
@@ -49,7 +58,7 @@ export async function getUsersByIds(userIds: string[]): Promise<AppUser[]> {
   );
 
   return snapshots.flatMap(snapshot =>
-    snapshot.docs.map(document => document.data() as AppUser)
+    snapshot.docs.map(mapUserDocument)
   );
 }
 
@@ -89,7 +98,7 @@ export async function getUserById(userId: string): Promise<AppUser | null> {
     return null;
   }
 
-  return userSnapshot.data() as AppUser;
+  return mapUserDocument(userSnapshot);
 }
 
 export async function getUserByQrToken(
@@ -103,7 +112,7 @@ export async function getUserByQrToken(
     return null;
   }
 
-  return snapshot.docs[0].data() as AppUser;
+  return mapUserDocument(snapshot.docs[0]);
 }
 
 export async function updateUser(

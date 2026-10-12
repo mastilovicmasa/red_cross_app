@@ -18,10 +18,9 @@ The solution was designed through interviews with intended users, analysis of th
 - Volunteer profiles and competency records
 - Internal and external activity management
 - Competency-based volunteer suggestions and invitations
-- Invitation response tracking and attendance recording
+- Invitation response tracking and QR-code attendance recording for internal activities
 - Activity reports with photo attachments
-- Equipment inventory, issue, return, and assignment tracking
-- QR-code workflows for attendance and equipment operations
+- Equipment inventory, QR-code-based issue and return workflows, and assignment tracking
 - Role-based navigation and access control
 
 ## Technology Stack
@@ -38,12 +37,12 @@ The solution was designed through interviews with intended users, analysis of th
 
 ### Activity Management
 
-![Creating an external activity and selecting competencies](docs/screenshots/activity-creation.png)
+<img src="docs/screenshots/activity-creation.png" alt="Creating an external activity and selecting competencies" width="420" />
 
 ### Volunteer Suggestions
 
-![Competency-based volunteer suggestions](docs/screenshots/volunteer-suggestions.jpg)
+<img src="docs/screenshots/volunteer-suggestions.jpg" alt="Competency-based volunteer suggestions" width="360" />
 
 ### Equipment Inventory
 
-![Equipment types and inventory records](docs/screenshots/equipment-inventory.jpg)
+<img src="docs/screenshots/equipment-inventory.jpg" alt="Equipment types and inventory records" width="360" />
